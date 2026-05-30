@@ -1,5 +1,3 @@
-Here is a clean, straightforward `README.md` written completely in English, perfect for a crisp repository presentation.
-
 # 🗡️ Project Milo
 
 Project Milo is a 2D top-down retro action-adventure game inspired by classic medieval fantasy RPGs like *The Legend of Zelda*. Built with **Godot Engine 4**, the game features a seamless grid-based world exploration, classic dialogue interactions, and real-time navigation.
