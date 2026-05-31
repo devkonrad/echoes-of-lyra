@@ -1,3 +1,10 @@
-[gd_scene format=3 uid="uid://c0mfh2omu31rp"]
+[gd_scene load_steps=3 format=3 uid="uid://c0mfh2omu31rp"]
+
+[ext_resource type="Script" path="res://scripts/ui_canvas.gd" id="1_5don1"]
+[ext_resource type="PackedScene" uid="uid://dw83y5ivmpaaq" path="res://scenes/inventory_ui.tscn" id="1_7teb4"]
 
 [node name="UiCanvas" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1_5don1")
+
+[node name="InventoryUI" parent="." instance=ExtResource("1_7teb4")]

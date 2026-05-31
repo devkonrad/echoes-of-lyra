@@ -39,7 +39,18 @@ region_rect = Rect2(0, 0, 16, 16)
 
 [node name="PickupItem" parent="." instance=ExtResource("4_4w1os")]
 position = Vector2(1540, 958)
+item_name_override = "Glove"
+description_override = "A simple glove"
 is_consumable_override = true
 use_atlas_cutting = true
 sprite_sheet = ExtResource("5_trpej")
 region_rect = Rect2(64, 64, 16, 16)
+
+[node name="PickupItem2" parent="." instance=ExtResource("4_4w1os")]
+position = Vector2(1673, 1033)
+item_name_override = "Nercklace"
+description_override = "Power Necklace"
+is_consumable_override = true
+use_atlas_cutting = true
+sprite_sheet = ExtResource("5_trpej")
+region_rect = Rect2(32, 48, 16, 16)
