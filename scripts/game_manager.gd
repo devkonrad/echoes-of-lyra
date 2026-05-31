@@ -15,6 +15,8 @@ var overworld: Node2D = null
 var global_gui: CanvasLayer = null
 var dialogue_hud: Control = null
 
+var milo_portrait: Texture2D = null
+
 func _ready() -> void:
 	print("GameManager: System initialized.")
 
@@ -56,6 +58,11 @@ func spawn_milo(global_pos: Vector2) -> void:
 
 	milo = MILO_SCENE.instantiate() as CharacterBody2D
 	milo.global_position = global_pos
+
+	if "milo_portrait" in milo:
+		milo.milo_portrait = load("res://avatar/milo.png") as Texture2D
+		milo_portrait = milo.milo_portrait
+
 	overworld.add_child(milo)
 	print("GameManager: Milo spawned successfully at: ", global_pos)
 
@@ -78,7 +85,13 @@ func load_dialog_hud() -> void:
 		dialogue_hud.position = Vector2(240,250)
 		global_gui.add_child(dialogue_hud)
 
-func start_dialogue(lines: Array[String]) -> void:	
+func start_dialogue(lines: Array[String], portrait: Texture2D) -> void:  
 	print("[Game Manager] Start dialog...")
-	dialogue_hud.start_dialogue(lines)
+	
+	# Opcional/Recomendado: Se você tiver a lógica de congelar o Milo, aplique aqui:
+	if milo: 
+		milo.set_physics_process(false)
+		
+	# Repassa as linhas e a imagem do avatar recebida do NPC direto para a HUD
+	dialogue_hud.start_dialogue(lines, portrait)
 

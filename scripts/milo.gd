@@ -1,5 +1,8 @@
 extends CharacterBody2D
 
+# --- Dialogue and Identity Assets ---
+@export var milo_portrait: Texture2D
+
 # --- Movement Constants ---
 @export var TILE_SIZE: int = 16
 @export var WALK_SPEED: float = 7.5     # Tiles por segundo (Ajuste para mudar a velocidade)
@@ -22,6 +25,8 @@ func _ready() -> void:
 	position = position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
 	target_position = position
 
+	$Sprite.play("idle")
+
 func _physics_process(delta: float) -> void:
 	_handle_stealth_toggle()
 	
@@ -40,12 +45,20 @@ func _get_input() -> void:
 	input_vector = Vector2.ZERO
 	if Input.is_action_pressed("move_right"):
 		input_vector = Vector2.RIGHT
+		$Sprite.flip_h=false
+		$Sprite.play("walking")
 	elif Input.is_action_pressed("move_left"):
 		input_vector = Vector2.LEFT
+		$Sprite.flip_h=true
+		$Sprite.play("walking")
 	elif Input.is_action_pressed("move_down"):
 		input_vector = Vector2.DOWN
+		$Sprite.play("walking")
 	elif Input.is_action_pressed("move_up"):
 		input_vector = Vector2.UP
+		$Sprite.play("walking")
+	else:
+		$Sprite.play("idle")
 
 # 2. Manages stealth toggle separate from movement state
 func _handle_stealth_toggle() -> void:

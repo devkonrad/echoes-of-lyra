@@ -1,14 +1,92 @@
-[gd_scene load_steps=3 format=3 uid="uid://bldq4ctlxqk81"]
+[gd_scene load_steps=14 format=3 uid="uid://bldq4ctlxqk81"]
 
 [ext_resource type="Script" path="res://scripts/milo.gd" id="1_ujvpr"]
+[ext_resource type="Texture2D" uid="uid://c5wxn350v1l0k" path="res://sprites/milo_sample.png" id="2_rtpg7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_itqgd"]
 size = Vector2(16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ustx7"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0iu32"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(64, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c3iub"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(96, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gr53j"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(0, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f8438"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(32, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oiuta"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(64, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uh0l6"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(96, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vj8ei"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(128, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wkr8m"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(160, 128, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_6g3tu"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ustx7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0iu32")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c3iub")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gr53j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f8438")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oiuta")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_uh0l6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vj8ei")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wkr8m")
+}],
+"loop": true,
+"name": &"walking",
+"speed": 10.0
+}]
 
 [node name="Milo" type="CharacterBody2D"]
 script = ExtResource("1_ujvpr")
 
 [node name="ColorRect" type="ColorRect" parent="."]
+visible = false
 offset_left = -8.0
 offset_top = -8.0
 offset_right = 8.0
@@ -17,3 +95,8 @@ color = Color(0.549025, 0.155015, 0.230861, 1)
 
 [node name="collider" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_itqgd")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_6g3tu")
+animation = &"idle"
+frame_progress = 0.207867

@@ -2,13 +2,18 @@ extends Control
 
 # --- Node References ---
 @onready var text_box: PanelContainer = $TextBox
-@onready var dialogue_label: RichTextLabel = $TextBox/MarginContainer/DialogLabel
-@onready var letter_timer: Timer = $TextBox/LetterTimer
+@onready var portrait_rect: TextureRect = $TextBox/MarginContainer/HBoxContainer/Portrait
+@onready var dialogue_label: RichTextLabel = $TextBox/MarginContainer/HBoxContainer/DialogLabel
+@onready var letter_timer: Timer = $LetterTimer
 
 # --- Dialogue Variables ---
 var dialog_lines: Array[String] = []
 var current_line_index: int = 0
 var is_typing: bool = false
+
+# --- Dialogue Configuration ---
+@export var milo_portrait: Texture2D
+var active_npc_portrait: Texture2D = null
 
 signal dialogue_finished
 
@@ -19,7 +24,7 @@ func _ready() -> void:
 	
 	hide()
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	# Usa uma ação que você já deve ter configurada (ex: "ui_accept", "interact", etc.)
 	if event.is_action_pressed("ui_accept") and visible:		
 		get_viewport().set_input_as_handled()
@@ -31,25 +36,32 @@ func _unhandled_input(event: InputEvent) -> void:
 			# Se já terminou de digitar, avança para a próxima linha
 			_advance_dialogue()
 
-# Função pública que os NPCs vão chamar para iniciar a conversa
-func start_dialogue(lines: Array[String]) -> void:
+
+func start_dialogue(lines: Array[String], npc_portrait: Texture2D) -> void:
 	dialog_lines = lines
+	active_npc_portrait = npc_portrait # Guarda a foto do NPC que está falando
 	current_line_index = 0
 	show()
 	_display_current_line()
 
+
 func _display_current_line() -> void:
 	if current_line_index < dialog_lines.size():
 		is_typing = true
-		dialogue_label.text = dialog_lines[current_line_index]
+		var full_text: String = dialog_lines[current_line_index]
+		
+		# Lógica de verificação do Avatar
+		if full_text.begins_with("Milo:"):
+			portrait_rect.texture = GameManager.milo_portrait
+			dialogue_label.text = full_text.replace("Milo:", "").strip_edges()
+		else:
+			portrait_rect.texture = active_npc_portrait
+			dialogue_label.text = full_text.strip_edges()
+			
 		print(dialogue_label.text)
-		
-		# Começa mostrando 0 caracteres e liga o timer
 		dialogue_label.visible_characters = 0
-		
 		letter_timer.start()
 	else:
-		# Acabaram as linhas de diálogo, fecha a HUD
 		_close_dialogue()
 
 func _on_letter_timer_timeout() -> void:
@@ -76,3 +88,5 @@ func _close_dialogue() -> void:
 	hide()
 	dialog_lines.clear()
 	dialogue_finished.emit() # Avisa o GameManager que a conversa acabou!
+	
+	GameManager.milo.set_physics_process(true)
