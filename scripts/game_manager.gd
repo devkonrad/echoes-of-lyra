@@ -1,5 +1,9 @@
 extends Node
 
+# --- Inventory System ---
+# Esta Array vai guardar os arquivos ItemData que o Milo coletar pelo overworld
+
+
 # --- Preloaded Scenes (Assets) ---
 const UI_SCENE: PackedScene = preload("res://scenes/ui_canvas.tscn")
 const MILO_SCENE: PackedScene = preload("res://scenes/milo.tscn")
@@ -15,12 +19,21 @@ var overworld: Node2D = null
 var global_gui: CanvasLayer = null
 var dialogue_hud: Control = null
 
+# Used on dialogs
 var milo_portrait: Texture2D = null
+
+# Current inventory items
+var inventory: Array[ItemData] = []
 
 func _ready() -> void:
 	print("GameManager: System initialized.")
 
-# Triggered by main.gd to boot the game structure
+# INVENTORY
+func add_item(item: ItemData) -> void:
+	inventory.append(item)
+	print("GameManager: Item added to inventory: ", item.item_name)
+
+# MAIN GAME FUNCTIONS
 func start_game(node: Node2D) -> void:
 	main_node = node
 	load_overworld()
@@ -33,7 +46,6 @@ func _initialize_global_gui() -> void:
 		global_gui = UI_SCENE.instantiate()
 		main_node.add_child(global_gui)
 
-# Instantiates the level and hooks it up to the main node
 func load_overworld() -> void:
 	overworld = OVERWORLD.instantiate() as Node2D
 	main_node.add_child(overworld)
@@ -50,7 +62,6 @@ func load_overworld() -> void:
 		push_error("GameManager: 'spawn' node not found! Spawning at Vector2.ZERO.")
 		spawn_milo(Vector2.ZERO)
 
-# Spawns Milo inside the level at the designated position
 func spawn_milo(global_pos: Vector2) -> void:
 	if not overworld:
 		print("GameManager: Cannot spawn Milo because overworld is not loaded.")
@@ -66,6 +77,7 @@ func spawn_milo(global_pos: Vector2) -> void:
 	overworld.add_child(milo)
 	print("GameManager: Milo spawned successfully at: ", global_pos)
 
+# SIMPLE NPC - fOR DEBUG PURPOSES
 func spawn_npc_at_position(map_position: Vector2) -> void:
 	if not overworld:
 		return
@@ -79,19 +91,23 @@ func spawn_npc_at_position(map_position: Vector2) -> void:
 	overworld.add_child(npc_instance)
 	print("GameManager: Loads NPC in the position Vector2: ", map_position)
 
+
+# DIALOG SYSTEM
+
+# Loads the dialog screen
 func load_dialog_hud() -> void:
 	if global_gui:
 		dialogue_hud = DIALOGUE_SCREEN.instantiate() as Control
 		dialogue_hud.position = Vector2(240,250)
 		global_gui.add_child(dialogue_hud)
 
+# Start the dialog with an NPC
 func start_dialogue(lines: Array[String], portrait: Texture2D) -> void:  
 	print("[Game Manager] Start dialog...")
 	
-	# Opcional/Recomendado: Se você tiver a lógica de congelar o Milo, aplique aqui:
+	# Locks Milo while talks
 	if milo: 
 		milo.set_physics_process(false)
 		
-	# Repassa as linhas e a imagem do avatar recebida do NPC direto para a HUD
+	# Calls the dialog hud
 	dialogue_hud.start_dialogue(lines, portrait)
-
