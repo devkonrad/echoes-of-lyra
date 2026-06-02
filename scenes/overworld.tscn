@@ -4114,6 +4114,7 @@ sources/0 = SubResource("TileSetAtlasSource_2ulua")
 script = ExtResource("1_muawq")
 
 [node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(1696, 960)
 script = ExtResource("1_6w5gw")
 
 [node name="FloorLayer" type="TileMapLayer" parent="."]
