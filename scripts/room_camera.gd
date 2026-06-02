@@ -14,14 +14,14 @@ var current_grid_y: int = 4 # Line 4   (1-indexed mapping to 0-7, so 4 is index 
 var target_position: Vector2 = Vector2.ZERO
 var is_transitioning: bool = false
 
-@export var player_path: NodePath
 var player: CharacterBody2D = null
 
 func _ready() -> void:
-	# If player path is set, fetch the reference
-	if player_path:
-		player = get_node(player_path) as CharacterBody2D
-	
+	if GameManager.milo:
+		player = GameManager.milo
+
+	_check_player_bounds()
+
 	# Initial room positioning (e.g., E4)
 	# Converting E (index 4) and 4 (index 3) to pixels
 	_update_camera_position(false)
@@ -36,7 +36,10 @@ func _process(_delta: float) -> void:
 
 # Checks if the player has crossed the current screen boundaries
 func _check_player_bounds() -> void:
-	var player_pos: Vector2 = player.global_position
+	if not GameManager.milo:
+		return
+	
+	var player_pos: Vector2 = GameManager.milo.global_position
 	
 	# Calculate current screen bounds based on active grid quadrant
 	var min_x: float = current_grid_x * SCREEN_WIDTH

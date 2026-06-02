@@ -1,0 +1,81 @@
+[gd_scene load_steps=8 format=3 uid="uid://21uv22xsmbf0"]
+
+[ext_resource type="Script" path="res://scripts/scene_manager.gd" id="1_q31bq"]
+[ext_resource type="Shader" path="res://shaders/transition_pixelate.gdshader" id="2_yqxto"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0xgh1"]
+shader = ExtResource("2_yqxto")
+shader_parameter/progress = 1.0
+shader_parameter/size = Vector2(32, 32)
+
+[sub_resource type="Animation" id="Animation_ti0xu"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("TransitionColor:material:shader_parameter/progress")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [1.0]
+}
+
+[sub_resource type="Animation" id="Animation_kaesx"]
+resource_name = "fade_in"
+length = 0.7
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("TransitionColor:material:shader_parameter/progress")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.1, 0.6),
+"transitions": PackedFloat32Array(0.574349, 0.5),
+"update": 0,
+"values": [1.0, 0.0]
+}
+
+[sub_resource type="Animation" id="Animation_wrj6n"]
+resource_name = "fade_out"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("TransitionColor:material:shader_parameter/progress")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.233333),
+"transitions": PackedFloat32Array(1, 0.594603),
+"update": 0,
+"values": [0.0, 1.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_i77xc"]
+_data = {
+"RESET": SubResource("Animation_ti0xu"),
+"fade_in": SubResource("Animation_kaesx"),
+"fade_out": SubResource("Animation_wrj6n")
+}
+
+[node name="SceneManager" type="CanvasLayer"]
+script = ExtResource("1_q31bq")
+
+[node name="TransitionColor" type="ColorRect" parent="."]
+visible = false
+material = SubResource("ShaderMaterial_0xgh1")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="TransitionAnimation" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_i77xc")
+}
