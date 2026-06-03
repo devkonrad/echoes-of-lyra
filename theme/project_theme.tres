@@ -1,0 +1,6 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://b03scjy7bic0a"]
+
+[ext_resource type="FontFile" uid="uid://ccnipkqyp87jb" path="res://fonts/pixelmix.ttf" id="1_r31xi"]
+
+[resource]
+default_font = ExtResource("1_r31xi")

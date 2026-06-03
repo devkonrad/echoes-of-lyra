@@ -23,7 +23,7 @@ func _ready() -> void:
 	$animated_sprite.play("default")
 	
 	body_entered.connect(_on_body_entered)
-	#body_exited.connect(_on_body_exited)
+	body_exited.connect(_on_body_exited)
 
 func _input(event: InputEvent) -> void:
 	if player_in_range and event.is_action_pressed("ui_accept"):

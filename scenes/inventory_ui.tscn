@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://dw83y5ivmpaaq"]
+[gd_scene load_steps=3 format=3 uid="uid://dw83y5ivmpaaq"]
 
 [ext_resource type="Script" path="res://scripts/inventory_ui.gd" id="1_byxfh"]
+[ext_resource type="FontFile" uid="uid://ccnipkqyp87jb" path="res://fonts/pixelmix.ttf" id="2_d2anf"]
 
 [node name="InventoryUI" type="Control"]
 layout_mode = 3
@@ -30,9 +31,11 @@ offset_bottom = 118.0
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("2_d2anf")
 theme_override_font_sizes/font_size = 10
 
 [node name="DescriptionLabel" type="Label" parent="MarginContainer/Panel/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 10
+theme_override_fonts/font = ExtResource("2_d2anf")
+theme_override_font_sizes/font_size = 8
 autowrap_mode = 1

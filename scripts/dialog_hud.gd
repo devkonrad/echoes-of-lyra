@@ -25,7 +25,6 @@ func _ready() -> void:
 	hide()
 
 func _input(event: InputEvent) -> void:
-	# Usa uma ação que você já deve ter configurada (ex: "ui_accept", "interact", etc.)
 	if event.is_action_pressed("ui_accept") and visible:		
 		get_viewport().set_input_as_handled()
 
@@ -39,7 +38,7 @@ func _input(event: InputEvent) -> void:
 
 func start_dialogue(lines: Array[String], npc_portrait: Texture2D) -> void:
 	dialog_lines = lines
-	active_npc_portrait = npc_portrait # Guarda a foto do NPC que está falando
+	active_npc_portrait = npc_portrait # Saves the NPC picture
 	current_line_index = 0
 	show()
 	_display_current_line()
@@ -50,7 +49,7 @@ func _display_current_line() -> void:
 		is_typing = true
 		var full_text: String = dialog_lines[current_line_index]
 		
-		# Lógica de verificação do Avatar
+		# Checks the Avatar
 		if full_text.begins_with("Milo:"):
 			portrait_rect.texture = GameManager.milo_portrait
 			dialogue_label.text = full_text.replace("Milo:", "").strip_edges()
@@ -87,6 +86,6 @@ func _advance_dialogue() -> void:
 func _close_dialogue() -> void:
 	hide()
 	dialog_lines.clear()
-	dialogue_finished.emit() # Avisa o GameManager que a conversa acabou!
+	dialogue_finished.emit() # Marks the conversation as empty
 	
 	GameManager.milo.set_physics_process(true)

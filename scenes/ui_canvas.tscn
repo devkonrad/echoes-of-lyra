@@ -1,10 +1,103 @@
-[gd_scene load_steps=3 format=3 uid="uid://c0mfh2omu31rp"]
+[gd_scene load_steps=5 format=3 uid="uid://c0mfh2omu31rp"]
 
 [ext_resource type="Script" path="res://scripts/ui_canvas.gd" id="1_5don1"]
 [ext_resource type="PackedScene" uid="uid://dw83y5ivmpaaq" path="res://scenes/inventory_ui.tscn" id="1_7teb4"]
+[ext_resource type="Texture2D" uid="uid://g3bptlmv5g1x" path="res://ui/key.png" id="2_3prg5"]
+[ext_resource type="Texture2D" uid="uid://vb25fu4sjw3i" path="res://ui/coin.png" id="2_r4h1j"]
 
 [node name="UiCanvas" type="CanvasLayer"]
 process_mode = 3
 script = ExtResource("1_5don1")
 
+[node name="HUD" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopLeftContainer" type="HBoxContainer" parent="HUD"]
+layout_mode = 1
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 52.0
+offset_bottom = 52.0
+
+[node name="HeartGrid" type="GridContainer" parent="HUD/TopLeftContainer"]
+layout_mode = 2
+
+[node name="TopRightContainer" type="HBoxContainer" parent="HUD"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -40.0
+offset_bottom = 40.0
+grow_horizontal = 0
+
+[node name="MagicBarContainer" type="VBoxContainer" parent="HUD/TopRightContainer"]
+layout_mode = 2
+
+[node name="MagicBar" type="TextureProgressBar" parent="HUD/TopRightContainer/MagicBarContainer"]
+layout_mode = 2
+
+[node name="CountersContainer" type="VBoxContainer" parent="HUD/TopRightContainer"]
+layout_mode = 2
+
+[node name="Margins" type="MarginContainer" parent="HUD/TopRightContainer/CountersContainer"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+
+[node name="CoinCounter" type="HBoxContainer" parent="HUD/TopRightContainer/CountersContainer/Margins"]
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="Icon" type="TextureRect" parent="HUD/TopRightContainer/CountersContainer/Margins/CoinCounter"]
+layout_mode = 2
+texture = ExtResource("2_r4h1j")
+
+[node name="Label" type="Label" parent="HUD/TopRightContainer/CountersContainer/Margins/CoinCounter"]
+layout_mode = 2
+text = "999"
+
+[node name="KeyCounter" type="HBoxContainer" parent="HUD/TopRightContainer/CountersContainer/Margins"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="Icon" type="TextureRect" parent="HUD/TopRightContainer/CountersContainer/Margins/KeyCounter"]
+layout_mode = 2
+texture = ExtResource("2_3prg5")
+
+[node name="Label" type="Label" parent="HUD/TopRightContainer/CountersContainer/Margins/KeyCounter"]
+layout_mode = 2
+text = "0
+"
+
+[node name="ActiveItemContainer" type="PanelContainer" parent="HUD"]
+layout_mode = 0
+anchor_right = 0.0833333
+anchor_bottom = 0.148148
+offset_left = 32.0
+offset_top = 12.0
+offset_right = 32.0
+offset_bottom = 12.0
+metadata/_edit_use_anchors_ = true
+
+[node name="ItemIcon" type="TextureRect" parent="HUD/ActiveItemContainer"]
+layout_mode = 2
+
 [node name="InventoryUI" parent="." instance=ExtResource("1_7teb4")]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -118.0
+offset_top = -145.0
+offset_right = -118.0
+offset_bottom = -145.0
+grow_horizontal = 0
+grow_vertical = 0
