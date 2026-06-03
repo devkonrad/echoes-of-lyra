@@ -78,7 +78,7 @@ func _on_body_exited(body: Node2D) -> void:
 
 func _collect_item() -> void:
 	if final_item_data:
-		GameManager.add_item(final_item_data)
+		InventoryManager.add_item(final_item_data)
 		print("[Pickup] Milo successfully collected: ", final_item_data.item_name)
 	
 	# Turn off processing to prevent double triggers before freeing the node

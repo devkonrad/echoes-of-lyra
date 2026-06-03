@@ -20,17 +20,17 @@ func toggle() -> void:
 		_update_inventory_display()
 		get_tree().paused = true # Pauses Milo and the world when browsing items
 
-# Clears and rebuilds the visual list based on GameManager data in real-time
+# Clears and rebuilds the visual list based on InventoryManager data in real-time
 func _update_inventory_display() -> void:
 	item_list.clear()
 	description_label.text = "Select an item..."
 	
 	# Fetching directly from the source to prevent frozen or null state references
-	if GameManager.inventory.is_empty():
+	if InventoryManager.inventory.is_empty():
 		item_list.add_item("Empty...")
 		return
 		
-	for item in GameManager.inventory:
+	for item in InventoryManager.inventory:
 		if item:
 			# Adds the item name and its texture icon if it exists
 			var index = item_list.add_item(item.item_name, item.texture)
