@@ -21,6 +21,7 @@ GameManager="*res://scripts/game_manager.gd"
 SceneManager="*res://scenes/scene_manager.tscn"
 InventoryManager="*res://scripts/inventory_manager.gd"
 DialogManager="*res://scripts/dialog_manager.gd"
+CameraManager="*res://scripts/camera_manager.gd"
 
 [display]
 

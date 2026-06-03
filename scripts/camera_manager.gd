@@ -1,4 +1,4 @@
-extends Camera2D
+extends Node
 
 # --- Resolution Constants ---
 const SCREEN_WIDTH: float = 480.0
@@ -17,16 +17,20 @@ var is_transitioning: bool = false
 var player: CharacterBody2D = null
 
 func _ready() -> void:
-	print("Loading main camera...")
+	print("CameraManager: System initialized as Autoload.")
 
 func _process(_delta: float) -> void:
+	# Only execute if a valid physical camera is bound to GameManager
+	if not is_instance_valid(GameManager.current_camera):
+		return
+
 	# Test player instance
 	if not is_instance_valid(player) and is_instance_valid(GameManager.milo):
 		player = GameManager.milo # Hook into your global manager dynamically
 
 		# Recalculate grid coordinates based on actual Milo position ---
 		_sync_grid_to_player_position()
-		_update_camera_position(false)
+		_update_camera_position(true)
 		
 	if is_instance_valid(player) and not is_transitioning:
 		_check_player_bounds()
@@ -81,19 +85,22 @@ func _update_camera_position(smooth: bool) -> void:
 	
 	if smooth:
 		is_transitioning = true
-		# Disable player movement during screen transition if desired
-		if is_instance_valid(player): player.set_physics_process(false)
+		if is_instance_valid(player): 
+			player.set_physics_process(false)
 		
+		# Create the tween on the active physical camera instead of self
 		var tween: Tween = create_tween()
 		tween.set_trans(Tween.TRANS_QUART)
 		tween.set_ease(Tween.EASE_OUT)
-		tween.tween_property(self, "global_position", target_position, 0.7) # 0.7 seconds transition
+		tween.tween_property(GameManager.current_camera, "global_position", target_position, 0.7)
 		tween.tween_callback(func(): 
 			is_transitioning = false
-			if is_instance_valid(player): player.set_physics_process(true)
+			if is_instance_valid(player): 
+				player.set_physics_process(true)
 		)
 	else:
-		global_position = target_position
+		# Direct snap applied to the bound physical camera
+		GameManager.current_camera.global_position = target_position
 
 # Finds the correct quadrant coordinates based on Milo's physics location ---
 func _sync_grid_to_player_position() -> void:
@@ -115,4 +122,4 @@ func _sync_grid_to_player_position() -> void:
 # Debug print to show current quadrant in Zelda notation (e.g., E4)
 func _print_current_quadrant() -> void:
 	var col_letter: String = COLUMNS[clampi(current_grid_x, 0, 7)]
-	print("Camera: Matrix locked on Quadrant [", col_letter, current_grid_y, "]")
+	print("CameraManager: Matrix locked on Quadrant [", col_letter, current_grid_y, "]")

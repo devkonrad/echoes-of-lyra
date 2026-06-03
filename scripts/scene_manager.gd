@@ -51,9 +51,17 @@ func load_scene(scene_name: String) -> Variant:
 		# Change scene
 		active_scene_node = packed_scene.instantiate()
 		
+		# Track the camera
+		if is_instance_valid(SceneManager.active_scene_node):
+			var current_camera = SceneManager.active_scene_node.get_node_or_null("Camera") as Camera2D
+			if current_camera:
+				GameManager.setCurrentCamera(current_camera)
+
 		GameManager.main_node.add_child(
 			active_scene_node
 		)
+
+		GameManager.current_camera.global_position = hero_spawn_position
 
 		# Fade effect
 		animation.play("fade_in")
@@ -100,8 +108,7 @@ func change_to_scene(scene_name: String) -> void:
 	await unload_scene()
 	await load_scene(scene_name)
 	
-	GameManager.spawn_milo(hero_spawn_position)
-	
+	GameManager.spawn_milo(hero_spawn_position)	
 
 # Change to previous scene
 func go_back() -> void:

@@ -15,8 +15,14 @@ var main_node: Node2D = null
 var milo: CharacterBody2D = null
 var milo_portrait: Texture2D = null
 
+# Camera
+var current_camera: Camera2D = null
+
 func _ready() -> void:
 	print("GameManager: System initialized.")
+
+func setCurrentCamera(camera: Camera2D):
+	current_camera = camera
 
 func start_game(node: Node2D) -> void:
 	print("[GameManager] Starting the game...")
