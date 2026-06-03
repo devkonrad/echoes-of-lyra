@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://6x4t8fpt24y7"]
+[gd_scene load_steps=4 format=3 uid="uid://6x4t8fpt24y7"]
 
 [ext_resource type="Script" path="res://scripts/dialog_hud.gd" id="1_08cd2"]
+[ext_resource type="FontFile" uid="uid://ccnipkqyp87jb" path="res://fonts/pixelmix.ttf" id="2_g5we0"]
+[ext_resource type="FontFile" uid="uid://be0ht0cyf5bnk" path="res://fonts/pixelmix_bold.ttf" id="3_hoq8t"]
 
 [node name="DialogHud" type="Control"]
 layout_mode = 3
@@ -39,7 +41,18 @@ expand_mode = 1
 [node name="DialogLabel" type="RichTextLabel" parent="TextBox/MarginContainer/HBoxContainer"]
 custom_minimum_size = Vector2(400, 40)
 layout_mode = 2
+theme_override_constants/line_separation = 2
+theme_override_fonts/normal_font = ExtResource("2_g5we0")
+theme_override_fonts/mono_font = ExtResource("2_g5we0")
+theme_override_fonts/italics_font = ExtResource("2_g5we0")
+theme_override_fonts/bold_italics_font = ExtResource("3_hoq8t")
+theme_override_fonts/bold_font = ExtResource("3_hoq8t")
+theme_override_font_sizes/bold_italics_font_size = 11
+theme_override_font_sizes/italics_font_size = 11
+theme_override_font_sizes/mono_font_size = 11
+theme_override_font_sizes/normal_font_size = 11
+theme_override_font_sizes/bold_font_size = 11
 bbcode_enabled = true
 
 [node name="LetterTimer" type="Timer" parent="."]
-wait_time = 0.05
+wait_time = 0.03

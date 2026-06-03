@@ -10,7 +10,7 @@ extends Area2D
 	"NPC: Please take care out there!"
 ]
 
-@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var animated_sprite: AnimatedSprite2D = $animated_sprite
 
 var player_in_range: bool = false
 
@@ -23,12 +23,13 @@ func _ready() -> void:
 	$animated_sprite.play("default")
 	
 	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
+	#body_exited.connect(_on_body_exited)
 
-func _unhandled_input(event: InputEvent) -> void:
-	# Only allow interaction if the player is in range AND a dialogue is NOT already active
+func _input(event: InputEvent) -> void:
 	if player_in_range and event.is_action_pressed("ui_accept"):
-		if GameManager.dialogue_hud and not GameManager.dialogue_hud.visible:
+		if DialogManager.dialogue_hud and not DialogManager.dialogue_hud.visible:
+			#_start_conversation()
+			print("Starts a conversation ...")
 			_start_conversation()
 
 func _start_conversation() -> void:
@@ -46,13 +47,13 @@ func _start_conversation() -> void:
 			# Caso você esqueça de colocar a tag na fala, ele assume que é o NPC falando
 			formatted_lines.append(npc_name + ": " + line)
 
-	# IMPORTANTE: Passamos o array de falas E o avatar do NPC para o GameManager
-	GameManager.start_dialogue(formatted_lines, npc_portrait)
-
-func _on_body_entered(body: Node2D) -> void:
-	if body is CharacterBody2D:
-		player_in_range = true
+	# IMPORTANTE: Passamos o array de falas E o avatar do NPC para o DialogManager
+	DialogManager.start_dialogue(formatted_lines, npc_portrait)
 
 func _on_body_exited(body: Node2D) -> void:
 	if body is CharacterBody2D:
 		player_in_range = false
+
+func _on_body_entered(body: Node2D) -> void:
+	if body is CharacterBody2D:
+		player_in_range = true

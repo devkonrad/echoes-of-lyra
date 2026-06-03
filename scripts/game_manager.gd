@@ -69,11 +69,9 @@ func _spawn_npc_for_debug() -> void:
 
 func _initialize_global_gui() -> void:
 	print("GameManager: Initializing Global GUI...")
-	"""
 	if main_node:
 		global_gui = UI_SCENE.instantiate()
 		main_node.add_child(global_gui)
 		
-		# Pedimos ao DialogManager para carregar o HUD dele usando a nossa GUI recém-criada
-		DialogManager.load_dialog_hud(global_gui)
-	"""
+		# Loads Dialog HUD
+		DialogManager.load_dialog_hud()

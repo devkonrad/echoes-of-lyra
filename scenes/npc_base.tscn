@@ -31,7 +31,6 @@ animations = [{
 
 [node name="NPCBase" type="Area2D"]
 script = ExtResource("1_12h1g")
-npc_name = null
 npc_portrait = ExtResource("2_0m1vv")
 dialogue_lines = Array[String](["NPC: Olá milo como vai?", "Milo: Tudo bem e com você?", "NPC: Tudo certo.", "NPC: Cuide-se. Estão dizendo por aí de que um bando de criminosos está atacando as pessoas desprevinidas;", "Milo: Obrigado, Talen. Vou tomar cuidado. Cuide-se também."])
 
