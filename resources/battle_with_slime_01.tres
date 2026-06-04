@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BattleEncounter" load_steps=5 format=3 uid="uid://beejjs5b12aay"]
+
+[ext_resource type="Script" path="res://scripts/battle_encounter.gd" id="1_jbrtr"]
+[ext_resource type="PackedScene" uid="uid://bf85x7nyfua1m" path="res://scenes/battle_slime.tscn" id="2_n7guv"]
+[ext_resource type="Script" path="res://scripts/battle_wave.gd" id="3_scdu0"]
+
+[sub_resource type="Resource" id="Resource_oq117"]
+resource_local_to_scene = true
+script = ExtResource("3_scdu0")
+enemies = Array[PackedScene]([ExtResource("2_n7guv"), ExtResource("2_n7guv"), ExtResource("2_n7guv")])
+
+[resource]
+script = ExtResource("1_jbrtr")
+waves = Array[Resource]([SubResource("Resource_oq117")])
