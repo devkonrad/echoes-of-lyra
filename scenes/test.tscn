@@ -4115,9 +4115,23 @@ tile_set = SubResource("TileSet_er1y2")
 position = Vector2(238, 239)
 go_back = true
 
+[node name="door_01" type="ColorRect" parent="."]
+offset_left = 229.0
+offset_top = 228.0
+offset_right = 249.0
+offset_bottom = 248.0
+color = Color(0, 0, 0, 1)
+
 [node name="hero_spawn" type="Marker2D" parent="."]
 position = Vector2(145, 216)
 
 [node name="door_portal2" parent="." instance=ExtResource("2_wuls4")]
 position = Vector2(422, 56)
 go_back = true
+
+[node name="door_02" type="ColorRect" parent="."]
+offset_left = 413.0
+offset_top = 48.0
+offset_right = 433.0
+offset_bottom = 68.0
+color = Color(0, 0, 0, 1)
