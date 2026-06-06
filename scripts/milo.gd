@@ -20,6 +20,10 @@ var input_vector: Vector2 = Vector2.ZERO
 var is_moving: bool = false
 var target_position: Vector2 = Vector2.ZERO
 
+# --- Battle variables ---
+var is_attacking: bool = false
+var original_battle_position: Vector2 = Vector2.ZERO
+
 func _ready() -> void:
 	# Garante que o personagem comece perfeitamente alinhado à grade de 16px
 	position = position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
@@ -58,9 +62,13 @@ func _get_input() -> void:
 		input_vector = Vector2.UP
 		$Sprite.play("walking")
 	else:
-		$Sprite.play("idle")
+		if is_attacking:
+			attack()
+		else:
+			$Sprite.play("idle")
+			
 
-# 2. Manages stealth toggle separate from movement state
+#Manages stealth toggle separate from movement state
 func _handle_stealth_toggle() -> void:
 	if Input.is_action_just_pressed("toggle_stealth"):
 		if current_state == States.STEALTH:
@@ -68,7 +76,7 @@ func _handle_stealth_toggle() -> void:
 		else:
 			current_state = States.STEALTH
 
-# 3. Initiates the movement to the next tile
+#Initiates the movement to the next tile
 func _start_move() -> void:
 	var target_speed = WALK_SPEED if current_state != States.STEALTH else STEALTH_SPEED
 	
@@ -85,7 +93,7 @@ func _start_move() -> void:
 		# If there is a wall, reset target so player can change direction instantly
 		target_position = position
 
-# 4. Interpolates position towards the target tile
+#Interpolates position towards the target tile
 func _continue_move(delta: float) -> void:
 	var current_speed = WALK_SPEED if current_state != States.STEALTH else STEALTH_SPEED
 	
@@ -98,9 +106,56 @@ func _continue_move(delta: float) -> void:
 		if current_state != States.STEALTH:
 			current_state = States.IDLE
 
-# 5. Updates placeholder visuals
+#Updates placeholder visuals
 func _update_visuals() -> void:
 	if current_state == States.STEALTH:
 		color_rect.modulate = Color(1, 1, 1, 0.4)
 	else:
 		color_rect.modulate = Color(1, 1, 1, 1)
+
+
+# --> BATTLE METHODS
+
+func dash_and_attack(target_global_pos: Vector2) -> void:
+	if is_attacking:
+		return
+		
+	# Prepare settings
+	is_attacking = true
+	original_battle_position = global_position 
+	
+	# Dash to the Enemy
+	var tween: Tween = create_tween().set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+	var attack_position: Vector2 = target_global_pos + Vector2(0, 10)
+	tween.tween_property(
+		self,
+		"global_position",
+		attack_position,
+		0.25
+	)
+	
+	# Perform the attack
+	tween.tween_callback(attack)
+
+
+func attack() -> void:
+	$Sprite.play("attack")
+
+
+func _on_sprite_animation_finished() -> void:
+	if $Sprite.animation == "attack":
+		var tween_back: Tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+
+		# Dash back to the original point
+		tween_back.tween_property(
+			self,
+			"global_position",
+			original_battle_position,
+			0.25
+		)
+
+		# Clean de variables
+		tween_back.tween_callback(func():
+			is_attacking = false
+			$Sprite.play("idle")
+		)

@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://c0mfh2omu31rp"]
+[gd_scene load_steps=6 format=3 uid="uid://c0mfh2omu31rp"]
 
 [ext_resource type="Script" path="res://scripts/ui_canvas.gd" id="1_5don1"]
 [ext_resource type="PackedScene" uid="uid://dw83y5ivmpaaq" path="res://scenes/inventory_ui.tscn" id="1_7teb4"]
 [ext_resource type="Texture2D" uid="uid://g3bptlmv5g1x" path="res://ui/key.png" id="2_3prg5"]
 [ext_resource type="Texture2D" uid="uid://vb25fu4sjw3i" path="res://ui/coin.png" id="2_r4h1j"]
+[ext_resource type="PackedScene" uid="uid://4beo2lv12j1u" path="res://scenes/battle_ui_menu.tscn" id="5_fo1co"]
 
 [node name="UiCanvas" type="CanvasLayer"]
 process_mode = 3
@@ -16,6 +17,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="TopLeftContainer" type="HBoxContainer" parent="HUD"]
 layout_mode = 1
@@ -77,6 +79,7 @@ text = "0
 "
 
 [node name="ActiveItemContainer" type="PanelContainer" parent="HUD"]
+visible = false
 layout_mode = 0
 anchor_right = 0.0833333
 anchor_bottom = 0.148148
@@ -90,6 +93,7 @@ metadata/_edit_use_anchors_ = true
 layout_mode = 2
 
 [node name="InventoryUI" parent="." instance=ExtResource("1_7teb4")]
+visible = true
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
@@ -101,3 +105,5 @@ offset_right = -118.0
 offset_bottom = -145.0
 grow_horizontal = 0
 grow_vertical = 0
+
+[node name="BattleUiMenu" parent="." instance=ExtResource("5_fo1co")]

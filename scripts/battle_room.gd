@@ -26,8 +26,14 @@ enum BattleState {
 @onready var spawn_02: Marker2D = $EnemyPositions/enemy_spawn_02
 @onready var spawn_03: Marker2D = $EnemyPositions/enemy_spawn_03
 
+# Damage popup scene
+const DAMAGE_POPUP_SCENE = preload("res://scenes/damage_popup.tscn")
+
 # Milo Spawn Point
 @onready var hero_spawn: Marker2D = $hero_spawn
+
+# --- Global UI Bindings ---
+@onready var UiCanvas: CanvasLayer = GameManager.global_gui
 
 # --- Properties & Tracking ---
 
@@ -43,13 +49,20 @@ var current_state: BattleState = BattleState.START
 ## Pointer index for the active combat wave within the injected encounter data.
 var current_wave_index: int = 0
 
+## Tracks which enemy's turn it is to strike during the round loop.
+var current_enemy_index: int = 0
+
 ## The active data architecture containing waves, music, and layout metadata.
 var current_encounter: BattleEncounter
+
+## Tracks if the player has clicked "Attack" and is currently choosing which enemy to hit.
+var is_selecting_target: bool = false
 
 # --- Lifecycle Methods ---
 
 func _ready() -> void:
 	_ensure_markers_ready()
+	_connect_ui_signals()
 	print("[Battle] BattleRoom loaded in tree. Waiting for data injection...")
 
 
@@ -64,6 +77,7 @@ func init_battle(encounter_data: BattleEncounter) -> void:
 	_ensure_markers_ready()
 	current_encounter = encounter_data
 	current_wave_index = 0
+	current_enemy_index = 0
 	print("[Battle] Data successfully injected by SceneManager.")
 	
 	_enter_state(BattleState.START)
@@ -73,22 +87,28 @@ func init_battle(encounter_data: BattleEncounter) -> void:
 
 ## Orchestrates state switches and executes corresponding handler logic.
 func _enter_state(new_state: BattleState) -> void:
-	current_state = new_state
-	
-	match current_state:
+	match new_state:
 		BattleState.START:
+			current_state = new_state
 			_setup_battle()
 		BattleState.PLAYER_TURN:
+			current_state = new_state
 			_start_player_turn()
 		BattleState.ENEMY_TURN:
+			current_state = new_state
 			_start_enemy_turn()
 		BattleState.CHECK_WIN_LOSS:
+			# THE FIX: We DO NOT overwrite current_state with CHECK_WIN_LOSS here.
+			# This allows _check_rules() to see if we just came from PLAYER_TURN or ENEMY_TURN.
 			_check_rules()
 		BattleState.NEXT_WAVE:
+			current_state = new_state
 			_advance_wave()
 		BattleState.VICTORY:
+			current_state = new_state
 			_end_battle(true)
 		BattleState.DEFEAT:
+			current_state = new_state
 			_end_battle(false)
 
 
@@ -99,6 +119,14 @@ func _ensure_markers_ready() -> void:
 	if enemy_spawns.is_empty():
 		enemy_spawns = [spawn_01, spawn_02, spawn_03]
 		print("[Battle] Spawn markers registered safely: ", enemy_spawns.size())
+
+
+## Connects the modular battle UI signals from the global Canvas Layer to this room.
+func _connect_ui_signals() -> void:
+	if UiCanvas and UiCanvas.battle_ui_menu:
+		UiCanvas.battle_ui_menu.attack_requested.connect(_on_ui_attack_requested)
+		UiCanvas.battle_ui_menu.defend_requested.connect(_on_ui_defend_requested)
+		print("[Battle] UI Signals connected successfully.")
 
 
 ## Handles basic spatial layout setups, asset binding, and audio pipelines.
@@ -125,13 +153,20 @@ func _setup_battle() -> void:
 	# Instantiate Milo safely at the validated spawn marker location
 	GameManager.spawn_milo(hero_spawn.global_position)
 
-	# Populate the active wave now that the layout and hero are initialized
-	_spawn_current_wave()
+	# Trigger the animation and let ITS callback handle the spawning.
+	if UiCanvas and UiCanvas.battle_ui_menu:
+		UiCanvas.battle_ui_menu.announce_event(
+			"Battle Started!",
+			_spawn_current_wave
+		)
+	else:
+		_spawn_current_wave()
 
 
 ## Instantiates enemy scenes bound to the current wave into registered spawn positions.
 func _spawn_current_wave() -> void:
 	active_enemies.clear()
+	current_enemy_index = 0
 	
 	if current_wave_index >= current_encounter.waves.size():
 		_enter_state(BattleState.VICTORY)
@@ -155,6 +190,10 @@ func _spawn_current_wave() -> void:
 			enemy_spawns[i].add_child(enemy_instance)
 			active_enemies.append(enemy_instance)
 			
+			# Connect the click signal for target selection
+			if enemy_instance is BattleEntity:
+				enemy_instance.entity_clicked.connect(_on_enemy_selected)
+			
 	print("[Battle] Wave ", current_wave_index + 1, " spawned with ", active_enemies.size(), " enemies.")
 	_enter_state(BattleState.PLAYER_TURN)
 
@@ -162,7 +201,53 @@ func _spawn_current_wave() -> void:
 ## Pauses automation workflows and signals interface hooks to wait for player input.
 func _start_player_turn() -> void:
 	print("[Battle] Milo's turn! Waiting for player input...")
+	
+	# Reset Milo's defense stance at the start of his turn
+	PlayerStateManager.is_defending = false
+	is_selecting_target = false
+	
+	# Triggers the visual screen overlay announcement via Tween animation
+	if UiCanvas and UiCanvas.battle_ui_menu:
+		UiCanvas.battle_ui_menu.announce_event(
+			"Your Turn!",
+			UiCanvas.battle_ui_menu.open
+		)
 
+
+## Triggered when player clicks "[ Attack ]" in the UI menu.
+func _on_ui_attack_requested() -> void:
+	if current_state != BattleState.PLAYER_TURN:
+		return
+		
+	# Hide the action menu to clear the screen
+	if UiCanvas and UiCanvas.battle_ui_menu:
+		UiCanvas.battle_ui_menu.close()
+
+		UiCanvas.battle_ui_menu.announce_event(
+			"Click over an enemy to attack!"
+		)
+	
+	# Enable targeting IMMEDIATELY so fast clicks are registered without waiting timers
+	is_selecting_target = true
+
+
+## Route UI trigger to put Milo into a defensive guard stance.
+func _on_ui_defend_requested() -> void:
+	execute_player_defend()
+
+
+## Triggered when the user physically clicks on an enemy body in the viewport.
+func _on_enemy_selected(target_enemy: BattleEntity) -> void:
+	if current_state != BattleState.PLAYER_TURN or not is_selecting_target:
+		return
+		
+	var target_index: int = active_enemies.find(target_enemy)
+	
+	if target_index != -1:
+		is_selecting_target = false
+		execute_player_attack(target_index)
+	else:
+		print("[Battle] Error: Clicked entity is not in the active enemy registry.")
 
 ## Evaluates structural validity of actions taken against a targeted index slot.
 func execute_player_attack(target_index: int) -> void:
@@ -170,47 +255,178 @@ func execute_player_attack(target_index: int) -> void:
 		print("[Battle] Cannot attack! It is not Milo's turn.")
 		return
 		
-	if target_index >= active_enemies.size() or active_enemies[target_index] == null:
+	if target_index >= active_enemies.size() or not is_instance_valid(active_enemies[target_index]):
 		print("[Battle] Invalid enemy target!")
 		return
 		
-	var target_enemy: Node = active_enemies[target_index]
-	print("[Battle] Milo attacks enemy at slot: ", target_index)
+	var target_enemy: BattleEntity = active_enemies[target_index] as BattleEntity
+	print("[Battle] Milo attacks ", target_enemy.entity_name, " at slot: ", target_index)
 	
-	# TODO: Inject your damage calculation here, e.g.:
-	# target_enemy.take_damage(PlayerStateManager.attack_power)
+	# Trigger Milo's dash attack
+	if is_instance_valid(GameManager.milo):
+		GameManager.milo.dash_and_attack(
+			target_enemy.global_position
+		)
+	
+	# --- d20 Hit Check Resolver ---
+	var hit_roll: int = randi_range(1, 20)
+	print("[Dice] Milo rolled a d20: ", hit_roll, " vs Target AC: ", target_enemy.armor_class)
+	
+	if hit_roll >= target_enemy.armor_class:
+		print("[Battle] Hit! Applying damage.")
+		var damage_amount: int = PlayerStateManager.attack_power
+		target_enemy.take_damage(damage_amount)
+		
+		# Add the damage popup with the hit value
+		target_enemy.spawn_damage_popup(str(damage_amount), Color(0.9, 0.3, 0.2))
+	else:
+		print("[Battle] Miss! Milo's strike failed to bypass enemy armor.")
+		
+		# Add the damage poput with missed
+		target_enemy.spawn_damage_popup("Missed!", Color(0.6, 0.6, 0.6))
+		
+	_enter_state(BattleState.CHECK_WIN_LOSS)
+
+## Puts Milo into a defensive position, mitigating damage until his next turn.
+func execute_player_defend() -> void:
+	if current_state != BattleState.PLAYER_TURN:
+		return
+		
+	if UiCanvas and UiCanvas.battle_ui_menu:
+		UiCanvas.battle_ui_menu.close()
+		
+	print("[Battle] Milo takes a defensive stance! Incoming damage will be mitigated.")
+	PlayerStateManager.is_defending = true
 	
 	_enter_state(BattleState.CHECK_WIN_LOSS)
 
 
-## Coordinates active enemy entity decision-making arrays.
+## Coordinates active enemy entity decision-making ONE entity at a time.
 func _start_enemy_turn() -> void:
 	print("[Battle] Enemies are acting...")
-	# Placeholder for enemy AI loop execution.
-	_enter_state(BattleState.PLAYER_TURN)
+	
+	if current_state != BattleState.ENEMY_TURN:
+		return
+
+	# Guard Clause: If enemies empty, reset index and verify rules
+	if active_enemies.is_empty():
+		current_enemy_index = 0
+		_enter_state(BattleState.CHECK_WIN_LOSS)
+		return
+		
+	# Round loop controller reset check (all enemies have acted this phase)
+	if current_enemy_index >= active_enemies.size():
+		current_enemy_index = 0
+		_enter_state(BattleState.CHECK_WIN_LOSS)
+		return
+
+	var enemy: Node = active_enemies[current_enemy_index]
+	
+	# Guard against instances that were freed (killed)
+	if not is_instance_valid(enemy):
+		print("[Battle] Warning: Enemy at index ", current_enemy_index, " was already freed. Skipping turn.")
+		# Do not increment current_enemy_index here because the array shifted down!
+		_enter_state(BattleState.CHECK_WIN_LOSS)
+		return
+
+	# Increment index early so the NEXT enemy is saved for the following loop turn
+	current_enemy_index += 1
+
+	if enemy is BattleEntity:
+		var active_enemy: BattleEntity = enemy as BattleEntity
+		
+		# 1. TRIGGER ENEMY TURN BANNER
+		if UiCanvas and UiCanvas.battle_ui_menu:
+			var banner_text: String = active_enemy.entity_name + "'s Turn!"
+			UiCanvas.battle_ui_menu.announce_event(banner_text)
+			await get_tree().create_timer(1.8).timeout
+		
+		# Double check validity after the long UI await animation, just in case Milo somehow counter-attacked
+		if not is_instance_valid(active_enemy):
+			_enter_state(BattleState.CHECK_WIN_LOSS)
+			return
+			
+		print("[Battle] ", active_enemy.entity_name, "'s turn to strike!")
+		
+		# Enemy dash attack
+		if is_instance_valid(GameManager.milo):
+			active_enemy.dash_and_attack(
+				GameManager.milo.global_position
+			)
+
+		# d20 Hit Check for Enemy against Milo's Armor Class
+		var enemy_roll: int = randi_range(1, 20)
+		print("[Dice] ", active_enemy.entity_name, " rolled a d20: ", enemy_roll, " vs Milo AC: ", PlayerStateManager.armor_class)
+		
+		if enemy_roll >= PlayerStateManager.armor_class:
+			print("[Battle] Hit! Milo takes damage from ", active_enemy.entity_name)
+			PlayerStateManager.take_damage(active_enemy.attack_power)
+			
+			# --- THE FIX: Toast de Dano no Milo ---
+			if is_instance_valid(GameManager.milo):
+				var popup = DAMAGE_POPUP_SCENE.instantiate()
+				popup.text = str(active_enemy.attack_power)
+				popup.modulate = Color(0.9, 0.3, 0.2)
+				get_tree().current_scene.add_child(popup)
+				# Centraliza um pouco em X (-30) e joga acima da cabeça em Y (-50)
+				popup.global_position = GameManager.milo.global_position + Vector2(-30, -50)
+		else:
+			print("[Battle] Miss! ", active_enemy.entity_name, "'s attack bounced off Milo's guard.")
+			
+			# --- THE FIX: Toast de Missed! no Milo ---
+			if is_instance_valid(GameManager.milo):
+				var popup = DAMAGE_POPUP_SCENE.instantiate()
+				popup.text = "Missed!"
+				popup.modulate = Color(0.6, 0.6, 0.6)
+				get_tree().current_scene.add_child(popup)
+				popup.global_position = GameManager.milo.global_position + Vector2(-30, -50)
+		
+		# Pacing buffer delay
+		await get_tree().create_timer(1.0).timeout
+
+	# Route immediately to check_rules to handle alternation
+	_enter_state(BattleState.CHECK_WIN_LOSS)
 
 
 ## Filters operational actor listings and processes progression checks.
 func _check_rules() -> void:
 	print("[Battle] Checking win/loss conditions...")
 	
-	# TODO: Implement Hero vitals verification check here.
-	# if PlayerStateManager.current_health <= 0:
-	#     _enter_state(BattleState.DEFEAT)
-	#     return
+	# 1. Check Defeat Condition (Milo's health)
+	if PlayerStateManager.current_health <= 0:
+		print("[Battle] Milo has been defeated in combat!")
+		_enter_state(BattleState.DEFEAT)
+		return
 	
+	# Filter the array to retain only valid, living enemy instances
 	var living_enemies: Array[Node] = []
 	for enemy in active_enemies:
 		if is_instance_valid(enemy):
 			living_enemies.append(enemy)
 			
 	active_enemies = living_enemies
+	print("[Battle] Active enemies remaining in this wave: ", active_enemies.size())
 	
+	# Prevent index from overflowing if Milo killed an enemy out of order
+	if current_enemy_index > active_enemies.size():
+		current_enemy_index = 0
+	
+	# Check Victory / Next Wave / Alternation Conditions
 	if active_enemies.size() > 0:
-		_enter_state(BattleState.ENEMY_TURN)
+		# Check who just finished acting using the preserved current_state
+		if current_state == BattleState.PLAYER_TURN:
+			# Milo just attacked, so shift to the individual enemy's turn
+			_enter_state(BattleState.ENEMY_TURN)
+		else:
+			# An enemy just attacked, so alternate back to Milo
+			_enter_state(BattleState.PLAYER_TURN)
 	else:
-		print("[Battle] Wave cleared!")
-		if current_wave_index + 1 < current_encounter.waves.size():
+		print("[Battle] Wave cleared successfully!")
+		current_enemy_index = 0
+		
+		var next_wave_available: bool = (current_wave_index + 1) < current_encounter.waves.size()
+		
+		if next_wave_available:
 			_enter_state(BattleState.NEXT_WAVE)
 		else:
 			_enter_state(BattleState.VICTORY)
@@ -225,9 +441,14 @@ func _advance_wave() -> void:
 
 ## Finalizes room teardowns, unlocks player maps, or fires global UI screens.
 func _end_battle(is_victory: bool) -> void:
+	if UiCanvas and UiCanvas.battle_ui_menu:
+		UiCanvas.battle_ui_menu.close()
+		
 	if is_victory:
+		if UiCanvas and UiCanvas.battle_ui_menu:
+			UiCanvas.battle_ui_menu.announce_event("You Win!!!")
 		print("[Battle] Victory!")
-		# TODO: Notify SceneManager to yield rewards and return to overworld.
 	else:
+		if UiCanvas and UiCanvas.battle_ui_menu:
+			UiCanvas.battle_ui_menu.announce_event("Sorry, you lost!")
 		print("[Battle] Defeat!")
-		# TODO: Handle game over screen implementation.

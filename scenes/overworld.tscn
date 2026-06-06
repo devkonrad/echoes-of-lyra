@@ -4161,17 +4161,11 @@ region_rect = Rect2(32, 48, 16, 16)
 
 [node name="door_portal" parent="." instance=ExtResource("7_uynec")]
 position = Vector2(1647, 889)
-go_back = false
 to_scene_name = "test"
-is_battle = false
-battle_resource_filename = ""
 
 [node name="door_portal2" parent="." instance=ExtResource("7_uynec")]
 position = Vector2(1663, 1239)
-go_back = false
 to_scene_name = "test"
-is_battle = false
-battle_resource_filename = ""
 
 [node name="NPCBase" parent="." instance=ExtResource("7_horyv")]
 position = Vector2(1753, 968)
@@ -4179,7 +4173,6 @@ dialogue_lines = Array[String](["NPC: Ola milo como vai?", "Milo: Tudo bem e com
 
 [node name="door_portal3" parent="." instance=ExtResource("7_uynec")]
 position = Vector2(1712, 890)
-go_back = false
 to_scene_name = "battle_room"
 is_battle = true
 battle_resource_filename = "battle_with_slime_01.tres"

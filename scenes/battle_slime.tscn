@@ -1,10 +1,31 @@
-[gd_scene load_steps=11 format=3 uid="uid://bf85x7nyfua1m"]
+[gd_scene load_steps=19 format=3 uid="uid://bf85x7nyfua1m"]
 
 [ext_resource type="Texture2D" uid="uid://bp6gwporuk77m" path="res://sprites/enemy_slime.png" id="1_3ltkt"]
 [ext_resource type="Script" path="res://scripts/battle_slime.gd" id="1_8hb7a"]
+[ext_resource type="Texture2D" uid="uid://cloh7cus64n5y" path="res://sprites/slime_attack.png" id="2_kqofu"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5u6pm"]
 size = Vector2(16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0wgj4"]
+atlas = ExtResource("2_kqofu")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pxhkq"]
+atlas = ExtResource("2_kqofu")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0r1cq"]
+atlas = ExtResource("2_kqofu")
+region = Rect2(0, 16, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x0h8a"]
+atlas = ExtResource("2_kqofu")
+region = Rect2(16, 16, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pcado"]
+atlas = ExtResource("2_kqofu")
+region = Rect2(0, 32, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2qohe"]
 atlas = ExtResource("1_3ltkt")
@@ -34,6 +55,26 @@ region = Rect2(16, 32, 16, 16)
 animations = [{
 "frames": [{
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_0wgj4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pxhkq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0r1cq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x0h8a")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pcado")
+}],
+"loop": false,
+"name": &"attack",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_2qohe")
 }, {
 "duration": 1.0,
@@ -52,11 +93,19 @@ animations = [{
 "texture": SubResource("AtlasTexture_qqdy0")
 }],
 "loop": true,
-"name": &"default",
+"name": &"idle",
 "speed": 7.0
 }]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h1u60"]
+bg_color = Color(0.682353, 0.552941, 0.027451, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yr01b"]
+bg_color = Color(0.830446, 0.196179, 0.33388, 1)
+
 [node name="BattleSlime" type="CharacterBody2D"]
+disable_mode = 2
+input_pickable = true
 script = ExtResource("1_8hb7a")
 
 [node name="Collider" type="CollisionShape2D" parent="."]
@@ -64,4 +113,18 @@ shape = SubResource("RectangleShape2D_5u6pm")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_q5c57")
-frame_progress = 0.583329
+animation = &"idle"
+
+[node name="UI" type="Node2D" parent="."]
+
+[node name="HealthBar" type="ProgressBar" parent="UI"]
+offset_left = -10.0
+offset_top = -16.0
+offset_right = 10.0
+offset_bottom = -10.0
+theme_override_constants/outline_size = 1
+theme_override_styles/background = SubResource("StyleBoxFlat_h1u60")
+theme_override_styles/fill = SubResource("StyleBoxFlat_yr01b")
+show_percentage = false
+
+[connection signal="animation_finished" from="Sprite" to="." method="_on_sprite_animation_finished"]

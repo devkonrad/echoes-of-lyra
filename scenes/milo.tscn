@@ -1,10 +1,34 @@
-[gd_scene load_steps=14 format=3 uid="uid://bldq4ctlxqk81"]
+[gd_scene load_steps=20 format=3 uid="uid://bldq4ctlxqk81"]
 
 [ext_resource type="Script" path="res://scripts/milo.gd" id="1_ujvpr"]
 [ext_resource type="Texture2D" uid="uid://c5wxn350v1l0k" path="res://sprites/milo_sample.png" id="2_rtpg7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_itqgd"]
 size = Vector2(16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fgflo"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(0, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eg4a3"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(0, 256, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0da81"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(32, 256, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wu1kh"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(64, 256, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kpaxm"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(96, 256, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gc4i5"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(32, 128, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ustx7"]
 atlas = ExtResource("2_rtpg7")
@@ -46,6 +70,29 @@ region = Rect2(160, 128, 32, 32)
 animations = [{
 "frames": [{
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_fgflo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eg4a3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0da81")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wu1kh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kpaxm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gc4i5")
+}],
+"loop": false,
+"name": &"attack",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_ustx7")
 }, {
 "duration": 1.0,
@@ -84,6 +131,9 @@ animations = [{
 
 [node name="Milo" type="CharacterBody2D"]
 script = ExtResource("1_ujvpr")
+TILE_SIZE = null
+WALK_SPEED = null
+STEALTH_SPEED = null
 
 [node name="ColorRect" type="ColorRect" parent="."]
 visible = false
@@ -98,5 +148,6 @@ shape = SubResource("RectangleShape2D_itqgd")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_6g3tu")
-animation = &"idle"
-frame_progress = 0.207867
+animation = &"attack"
+
+[connection signal="animation_finished" from="Sprite" to="." method="_on_sprite_animation_finished"]

@@ -1,6 +1,8 @@
 extends CanvasLayer
 
 @onready var inventory_ui: Control = $InventoryUI
+## Reference to our modular battle action menu instanced in the canvas
+@onready var battle_ui_menu: BattleUiMenu = $BattleUiMenu
 
 # --- HUD Node References ---
 @onready var heart_grid: GridContainer = $HUD/TopLeftContainer/HeartGrid
@@ -26,6 +28,10 @@ func _ready() -> void:
 	_on_gold_amount_changed(PlayerStateManager.gold)
 
 func _input(event: InputEvent) -> void:
+	# Block opening inventory if the battle menu is active/visible
+	if battle_ui_menu.visible:
+		return
+		
 	if event.is_action_pressed("toggle_inventory"):
 		inventory_ui.toggle()
 

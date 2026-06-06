@@ -29,6 +29,11 @@ var gold: int = 0:
 
 var current_level: int = 1
 
+# --- Combat Specific Stats ---
+var attack_power: int = 3
+var armor_class: int = 11
+var is_defending: bool = false
+
 func _ready() -> void:
 	print("PlayerStateManager: System initialized.")
 
@@ -45,7 +50,14 @@ func restore_magic(amount: int) -> void:
 	current_magic += amount
 
 func take_damage(amount: int) -> void:
-	current_health -= amount
+	var final_damage: int = amount
+	
+	# If Milo is taking a defensive stance, mitigate damage by 50%
+	if is_defending:
+		final_damage = max(1, int(amount / 2.0))
+		print("[PlayerStateManager] Milo mitigated damage from ", amount, " to ", final_damage)
+		
+	current_health -= final_damage
 	print("[PlayerStateManager] Milo took damage. Current health: ", current_health)
 
 func heal(amount: int) -> void:
