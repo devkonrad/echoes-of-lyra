@@ -1,6 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://4beo2lv12j1u"]
+[gd_scene load_steps=4 format=3 uid="uid://4beo2lv12j1u"]
 
 [ext_resource type="Script" path="res://scripts/battle_ui_menu.gd" id="1_vwfxk"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kja55"]
+bg_color = Color(0.838295, 0.11204, 0.113547, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h5v1m"]
+bg_color = Color(0.153018, 0.445172, 0.146226, 1)
+anti_aliasing = false
 
 [node name="BattleUiMenu" type="Control"]
 layout_mode = 3
@@ -67,3 +75,22 @@ offset_right = 482.0
 offset_bottom = 127.0
 text = "YOUR TURN"
 horizontal_alignment = 1
+
+[node name="MiloBattleBar" type="ProgressBar" parent="."]
+layout_mode = 0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 31.0
+offset_bottom = 103.0
+theme_override_styles/background = SubResource("StyleBoxFlat_kja55")
+theme_override_styles/fill = SubResource("StyleBoxFlat_h5v1m")
+fill_mode = 3
+show_percentage = false
+
+[node name="border" type="ReferenceRect" parent="MiloBattleBar"]
+custom_minimum_size = Vector2(16, 64)
+layout_mode = 0
+offset_right = 24.0
+offset_bottom = 96.0
+border_color = Color(1, 1, 1, 1)
+editor_only = false

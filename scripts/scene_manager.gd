@@ -137,6 +137,10 @@ func unload_scene() -> void:
 func change_to_scene(scene_name: String) -> void:
 	_set_hero_position(current_scene_path, GameManager.milo)
 
+	# Disable battle bar
+	if GameManager.global_gui.battle_ui_menu:
+		GameManager.global_gui.battle_ui_menu.visible = false
+
 	await unload_scene()
 	await load_scene(scene_name)
 	
@@ -160,7 +164,11 @@ func change_to_battle(scene_name: String, encounter_data: BattleEncounter) -> vo
 	_set_hero_position(current_scene_path, GameManager.milo)
 
 	await unload_scene()
-	
+
+	# Enable battle bar
+	if GameManager.global_gui.battle_ui_menu:
+		GameManager.global_gui.battle_ui_menu.visible = true
+
 	# Execute dynamic combat injection loops
 	await load_scene(scene_name, true, encounter_data)
 

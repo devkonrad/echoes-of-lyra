@@ -29,8 +29,14 @@ enum BattleState {
 # Damage popup scene
 const DAMAGE_POPUP_SCENE = preload("res://scenes/damage_popup.tscn")
 
+# Victory ItemScene
+const VICTORY_DROP_SCENE = preload("res://scenes/victory_drop.tscn")
+
 # Milo Spawn Point
 @onready var hero_spawn: Marker2D = $hero_spawn
+
+# Exit door
+@onready var exit_door: Node2D = $ExitDoor
 
 # --- Global UI Bindings ---
 @onready var UiCanvas: CanvasLayer = GameManager.global_gui
@@ -98,7 +104,7 @@ func _enter_state(new_state: BattleState) -> void:
 			current_state = new_state
 			_start_enemy_turn()
 		BattleState.CHECK_WIN_LOSS:
-			# THE FIX: We DO NOT overwrite current_state with CHECK_WIN_LOSS here.
+			# We DO NOT overwrite current_state with CHECK_WIN_LOSS here.
 			# This allows _check_rules() to see if we just came from PLAYER_TURN or ENEMY_TURN.
 			_check_rules()
 		BattleState.NEXT_WAVE:
@@ -124,8 +130,10 @@ func _ensure_markers_ready() -> void:
 ## Connects the modular battle UI signals from the global Canvas Layer to this room.
 func _connect_ui_signals() -> void:
 	if UiCanvas and UiCanvas.battle_ui_menu:
-		UiCanvas.battle_ui_menu.attack_requested.connect(_on_ui_attack_requested)
-		UiCanvas.battle_ui_menu.defend_requested.connect(_on_ui_defend_requested)
+		if not UiCanvas.battle_ui_menu.attack_requested.is_connected(_on_ui_attack_requested):
+			UiCanvas.battle_ui_menu.attack_requested.connect(_on_ui_attack_requested)
+		if not UiCanvas.battle_ui_menu.defend_requested.is_connected(_on_ui_defend_requested):
+			UiCanvas.battle_ui_menu.defend_requested.connect(_on_ui_defend_requested)
 		print("[Battle] UI Signals connected successfully.")
 
 
@@ -133,6 +141,10 @@ func _connect_ui_signals() -> void:
 func _setup_battle() -> void:
 	print("[Battle] Setting up battlefield...")
 	
+	# Hides the door
+	if is_instance_valid(exit_door):
+			exit_door.visible = false
+
 	# Guard Clause: Ensure encounter data is present
 	if not current_encounter:
 		print("[Battle] Error: No encounter data provided to BattleRoom!")
@@ -144,6 +156,9 @@ func _setup_battle() -> void:
 		print("[Battle] Error: Critical 'hero_spawn' marker missing in BattleRoom scene!")
 		_enter_state(BattleState.DEFEAT)
 		return
+
+	# Reset Milo's combat-specific health pool to max before spawning
+	PlayerStateManager.reset_battle_health()
 
 	# Play combat music dynamically if available
 	if current_encounter.battle_music:
@@ -303,34 +318,34 @@ func execute_player_defend() -> void:
 
 ## Coordinates active enemy entity decision-making ONE entity at a time.
 func _start_enemy_turn() -> void:
-	print("[Battle] Enemies are acting...")
+	print("[Battle] Enemies are acting... Current Index Evaluated: ", current_enemy_index)
 	
 	if current_state != BattleState.ENEMY_TURN:
 		return
 
-	# Guard Clause: If enemies empty, reset index and verify rules
+	# Guard Clause: If enemies array is empty, reset indices and alternate back
 	if active_enemies.is_empty():
 		current_enemy_index = 0
 		_enter_state(BattleState.CHECK_WIN_LOSS)
 		return
 		
-	# Round loop controller reset check (all enemies have acted this phase)
+	# Check if all enemies in the registry have already performed an action this round
 	if current_enemy_index >= active_enemies.size():
+		print("[Battle] All enemies acted. Resetting index for next round.")
 		current_enemy_index = 0
-		_enter_state(BattleState.CHECK_WIN_LOSS)
+		# Hard-force state back to PLAYER_TURN because the round cycle has closed completely
+		current_state = BattleState.ENEMY_TURN
+		_enter_state(BattleState.PLAYER_TURN)
 		return
 
 	var enemy: Node = active_enemies[current_enemy_index]
 	
-	# Guard against instances that were freed (killed)
+	# Guard against instances that were freed (killed) out of turn sequence
 	if not is_instance_valid(enemy):
-		print("[Battle] Warning: Enemy at index ", current_enemy_index, " was already freed. Skipping turn.")
-		# Do not increment current_enemy_index here because the array shifted down!
+		print("[Battle] Warning: Enemy at index ", current_enemy_index, " is dead. Skipping slot.")
+		# Do not increment here because the living arrays auto-shift down inside check_rules
 		_enter_state(BattleState.CHECK_WIN_LOSS)
 		return
-
-	# Increment index early so the NEXT enemy is saved for the following loop turn
-	current_enemy_index += 1
 
 	if enemy is BattleEntity:
 		var active_enemy: BattleEntity = enemy as BattleEntity
@@ -341,12 +356,12 @@ func _start_enemy_turn() -> void:
 			UiCanvas.battle_ui_menu.announce_event(banner_text)
 			await get_tree().create_timer(1.8).timeout
 		
-		# Double check validity after the long UI await animation, just in case Milo somehow counter-attacked
+		# Double check validity after the long UI await animation, just in case
 		if not is_instance_valid(active_enemy):
 			_enter_state(BattleState.CHECK_WIN_LOSS)
 			return
 			
-		print("[Battle] ", active_enemy.entity_name, "'s turn to strike!")
+		print("[Battle] executing action for: ", active_enemy.entity_name)
 		
 		# Enemy dash attack
 		if is_instance_valid(GameManager.milo):
@@ -362,18 +377,17 @@ func _start_enemy_turn() -> void:
 			print("[Battle] Hit! Milo takes damage from ", active_enemy.entity_name)
 			PlayerStateManager.take_damage(active_enemy.attack_power)
 			
-			# --- THE FIX: Toast de Dano no Milo ---
+			# Toast de Dano no Milo
 			if is_instance_valid(GameManager.milo):
 				var popup = DAMAGE_POPUP_SCENE.instantiate()
 				popup.text = str(active_enemy.attack_power)
 				popup.modulate = Color(0.9, 0.3, 0.2)
 				get_tree().current_scene.add_child(popup)
-				# Centraliza um pouco em X (-30) e joga acima da cabeça em Y (-50)
 				popup.global_position = GameManager.milo.global_position + Vector2(-30, -50)
 		else:
 			print("[Battle] Miss! ", active_enemy.entity_name, "'s attack bounced off Milo's guard.")
 			
-			# --- THE FIX: Toast de Missed! no Milo ---
+			# Toast de Missed! no Milo
 			if is_instance_valid(GameManager.milo):
 				var popup = DAMAGE_POPUP_SCENE.instantiate()
 				popup.text = "Missed!"
@@ -384,7 +398,10 @@ func _start_enemy_turn() -> void:
 		# Pacing buffer delay
 		await get_tree().create_timer(1.0).timeout
 
-	# Route immediately to check_rules to handle alternation
+	# Increment index ONLY AFTER the action has executed completely
+	current_enemy_index += 1
+	
+	# Route immediately to check_rules to handle loop persistence
 	_enter_state(BattleState.CHECK_WIN_LOSS)
 
 
@@ -392,8 +409,8 @@ func _start_enemy_turn() -> void:
 func _check_rules() -> void:
 	print("[Battle] Checking win/loss conditions...")
 	
-	# 1. Check Defeat Condition (Milo's health)
-	if PlayerStateManager.current_health <= 0:
+	# 1. Check Defeat Condition using the dynamic combat-specific health pool
+	if PlayerStateManager.current_battle_health <= 0:
 		print("[Battle] Milo has been defeated in combat!")
 		_enter_state(BattleState.DEFEAT)
 		return
@@ -407,29 +424,29 @@ func _check_rules() -> void:
 	active_enemies = living_enemies
 	print("[Battle] Active enemies remaining in this wave: ", active_enemies.size())
 	
-	# Prevent index from overflowing if Milo killed an enemy out of order
-	if current_enemy_index > active_enemies.size():
-		current_enemy_index = 0
-	
-	# Check Victory / Next Wave / Alternation Conditions
-	if active_enemies.size() > 0:
-		# Check who just finished acting using the preserved current_state
-		if current_state == BattleState.PLAYER_TURN:
-			# Milo just attacked, so shift to the individual enemy's turn
-			_enter_state(BattleState.ENEMY_TURN)
-		else:
-			# An enemy just attacked, so alternate back to Milo
-			_enter_state(BattleState.PLAYER_TURN)
-	else:
-		print("[Battle] Wave cleared successfully!")
+	# THE FIX: If ALL enemies are dead, go straight to Victory/Next Wave BEFORE evaluating turn swaps
+	if active_enemies.is_empty():
+		print("[Battle] All wave enemies cleared successfully!")
 		current_enemy_index = 0
 		
 		var next_wave_available: bool = (current_wave_index + 1) < current_encounter.waves.size()
-		
 		if next_wave_available:
 			_enter_state(BattleState.NEXT_WAVE)
 		else:
 			_enter_state(BattleState.VICTORY)
+		return
+
+	# Prevent index from overflowing if Milo killed an enemy out of order
+	if current_enemy_index > active_enemies.size():
+		current_enemy_index = 0
+	
+	# THE FIX: Alternate flow depending on who just finished acting
+	if current_state == BattleState.PLAYER_TURN:
+		# Milo finished attacking, pass turn execution over to the Enemy Queue phase
+		_enter_state(BattleState.ENEMY_TURN)
+	elif current_state == BattleState.ENEMY_TURN:
+		# Individual enemy completed its execution. Let's return to the loop array
+		_start_enemy_turn()
 
 
 ## Safely shifts wave indexing scopes forward.
@@ -441,14 +458,44 @@ func _advance_wave() -> void:
 
 ## Finalizes room teardowns, unlocks player maps, or fires global UI screens.
 func _end_battle(is_victory: bool) -> void:
+	# Hide action panels immediately to completely freeze any button processing
 	if UiCanvas and UiCanvas.battle_ui_menu:
 		UiCanvas.battle_ui_menu.close()
 		
+		# Hide the battle bar directly if it exists
+		if "milo_battle_bar" in UiCanvas.battle_ui_menu and UiCanvas.battle_ui_menu.milo_battle_bar:
+			UiCanvas.battle_ui_menu.milo_battle_bar.hide()
+			
+		# Completely hide the underlying Battle UI Container
+		UiCanvas.battle_ui_menu.hide()
+		if UiCanvas.battle_ui_menu.has_node("ActionMenu"):
+			UiCanvas.battle_ui_menu.get_node("ActionMenu").hide()
+		
 	if is_victory:
+		# Shows the door
+		if is_instance_valid(exit_door):
+			exit_door.visible = true
+
 		if UiCanvas and UiCanvas.battle_ui_menu:
+			# The announcer will reveal ONLY the full-screen banner text
 			UiCanvas.battle_ui_menu.announce_event("You Win!!!")
+
+		if current_encounter and current_encounter.victory_reward_item:
+			if UiCanvas:
+				var drop_instance = VICTORY_DROP_SCENE.instantiate()
+				UiCanvas.add_child(drop_instance)
+				drop_instance.launch_drop(
+					current_encounter.victory_reward_item
+				)
+
 		print("[Battle] Victory!")
 	else:
 		if UiCanvas and UiCanvas.battle_ui_menu:
 			UiCanvas.battle_ui_menu.announce_event("Sorry, you lost!")
 		print("[Battle] Defeat!")
+
+		# Wait 2 seconds
+		await get_tree().create_timer(2.0).timeout
+
+		# Go out the battle_room
+		SceneManager.go_back()

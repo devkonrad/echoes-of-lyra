@@ -29,8 +29,10 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	# Block opening inventory if the battle menu is active/visible
+	"""
 	if battle_ui_menu.visible:
 		return
+	"""
 		
 	if event.is_action_pressed("toggle_inventory"):
 		inventory_ui.toggle()

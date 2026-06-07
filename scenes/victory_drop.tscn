@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://cel84i45a7fcl"]
+
+[ext_resource type="Script" path="res://scripts/victory_drop.gd" id="1_2vc7x"]
+
+[node name="VictoryDrop" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_2vc7x")
+
+[node name="ItemSprite" type="Sprite2D" parent="."]

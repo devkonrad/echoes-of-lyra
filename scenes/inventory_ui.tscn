@@ -4,7 +4,6 @@
 [ext_resource type="FontFile" uid="uid://ccnipkqyp87jb" path="res://fonts/pixelmix.ttf" id="2_d2anf"]
 
 [node name="InventoryUI" type="Control"]
-visible = false
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_byxfh")
@@ -43,3 +42,13 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("2_d2anf")
 theme_override_font_sizes/font_size = 8
 autowrap_mode = 1
+
+[node name="NoteInfo" type="Label" parent="."]
+layout_mode = 2
+offset_left = -12.0
+offset_top = -1.0
+offset_right = 133.0
+offset_bottom = 9.0
+theme_override_font_sizes/font_size = 7
+text = "I -> Toogle Inventory"
+horizontal_alignment = 1
