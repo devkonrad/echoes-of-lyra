@@ -1,0 +1,55 @@
+{
+  "start_node_id": "intro",
+  "nodes": {
+    "intro": {
+      "speaker_type": "npc",
+      "text": "The Forest is too dangerous, Milo! A mystical barrier blocks the gate. Do you have the proper gear?",
+      "choices": [
+        {
+          "text": "Yes, I am ready to enter!",
+          "next_node_id": "check_gear_choice"
+        },
+        {
+          "text": "Not yet. Where can I find it?",
+          "next_node_id": "give_quest_tips"
+        }
+      ]
+    },
+    "give_quest_tips": {
+      "speaker_type": "npc",
+      "text": "Listen well! Search the Old Ruins for the Shield, Volcano Caves for the Cloak, and the Sun Temple for the Sword. Take this potion for your safety!",
+      "reward_item_id": "potion_health",
+      "choices": [
+        {
+          "text": "Thank you, Tallen! I will return soon.",
+          "next_node_id": "end_nodes"
+        }
+      ]
+    },
+    "check_gear_choice": {
+      "speaker_type": "milo",
+      "text": "I am traveling to find my sister... I must pass, even if I have to force my way through!",
+      "choices": [
+        {
+          "text": "Continue",
+          "next_node_id": "guardian_warning"
+        }
+      ]
+    },
+    "guardian_warning": {
+      "speaker_type": "npc",
+      "text": "Determination won't crack the lock, boy. Bring the Sword, Shield, and Cloak first!",
+      "choices": [
+        {
+          "text": "Understood.",
+          "next_node_id": "end_nodes"
+        }
+      ]
+    },
+    "end_nodes": {
+      "speaker_type": "system",
+      "text": "",
+      "choices": []
+    }
+  }
+}

@@ -4169,7 +4169,7 @@ to_scene_name = "test"
 
 [node name="NPCBase" parent="." instance=ExtResource("7_horyv")]
 position = Vector2(1753, 968)
-dialogue_lines = Array[String](["NPC: Ola milo como vai?", "Milo: Tudo bem e com voce?", "NPC: Tudo certo.", "NPC: Cuide-se. Estao dizendo por ai de que um bando de criminosos esta atacando as pessoas desprevinidas;", "Milo: Obrigado, Talen. Vou tomar cuidado. Cuide-se tambem."])
+dialogue_file_path = "res://dialogues/village_guardian.json"
 
 [node name="door_portal3" parent="." instance=ExtResource("7_uynec")]
 position = Vector2(1712, 890)

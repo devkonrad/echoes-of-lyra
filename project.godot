@@ -23,6 +23,7 @@ InventoryManager="*res://scripts/inventory_manager.gd"
 DialogManager="*res://scripts/dialog_manager.gd"
 CameraManager="*res://scripts/camera_manager.gd"
 PlayerStateManager="*res://scripts/PlayerStateManager.gd"
+HistoryManager="*res://scripts/history_manager.gd"
 
 [display]
 
@@ -31,6 +32,10 @@ window/size/viewport_height=270
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
+
+[editor]
+
+movie_writer/fps=30
 
 [gui]
 

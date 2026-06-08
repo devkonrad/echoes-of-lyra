@@ -9,6 +9,13 @@ layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_08cd2")
 
+[node name="ChoiceContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = -234.0
+offset_top = -125.0
+offset_right = 234.0
+offset_bottom = -75.0
+
 [node name="TextBox" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 7

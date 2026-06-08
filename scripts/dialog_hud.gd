@@ -1,3 +1,4 @@
+## Controls the text typing effects, active speaker portraits, and branch choice selections.
 extends Control
 
 # --- Node References ---
@@ -5,87 +6,142 @@ extends Control
 @onready var portrait_rect: TextureRect = $TextBox/MarginContainer/HBoxContainer/Portrait
 @onready var dialogue_label: RichTextLabel = $TextBox/MarginContainer/HBoxContainer/DialogLabel
 @onready var letter_timer: Timer = $LetterTimer
+## THE NEW HOOK: Reference to the choice injection vertical box layout
+@onready var choice_container: VBoxContainer = $ChoiceContainer
 
-# --- Dialogue Variables ---
-var dialog_lines: Array[String] = []
-var current_line_index: int = 0
+# --- Dialogue Interaction Variables ---
 var is_typing: bool = false
-
-# --- Dialogue Configuration ---
-@export var milo_portrait: Texture2D
+var active_npc_name: String = ""
 var active_npc_portrait: Texture2D = null
+## State lock to block inputs while choice buttons are active on screen
+var is_waiting_for_choice: bool = false
 
 signal dialogue_finished
 
 func _ready() -> void:
-	# O timer precisa ser "One Shot" (roda uma vez por gatilho)
 	letter_timer.one_shot = true
 	letter_timer.timeout.connect(_on_letter_timer_timeout)
-	
 	hide()
+	_clear_choice_nodes()
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_accept") and visible:		
+	# Prevent advancing if the screen is invisible or if we are locked waiting for a branching choice
+	if not visible or is_waiting_for_choice:
+		return
+		
+	if event.is_action_pressed("ui_accept"):        
 		get_viewport().set_input_as_handled()
 
 		if is_typing:
-			# Se ainda está digitando, mostra a linha inteira imediatamente
 			_finish_typing_instantly()
 		else:
-			# Se já terminou de digitar, avança para a próxima linha
 			_advance_dialogue()
 
-
-func start_dialogue(lines: Array[String], npc_portrait: Texture2D) -> void:
-	dialog_lines = lines
-	active_npc_portrait = npc_portrait # Saves the NPC picture
-	current_line_index = 0
+func start_dialogue(npc_name: String, npc_portrait: Texture2D) -> void:
+	active_npc_name = npc_name
+	active_npc_portrait = npc_portrait
+	is_waiting_for_choice = false
+	_clear_choice_nodes()
 	show()
-	_display_current_line()
+	_display_current_node()
 
-
-func _display_current_line() -> void:
-	if current_line_index < dialog_lines.size():
-		is_typing = true
-		var full_text: String = dialog_lines[current_line_index]
-		
-		# Checks the Avatar
-		if full_text.begins_with("Milo:"):
-			portrait_rect.texture = GameManager.milo_portrait
-			dialogue_label.text = full_text.replace("Milo:", "").strip_edges()
-		else:
-			portrait_rect.texture = active_npc_portrait
-			dialogue_label.text = full_text.strip_edges()
-			
-		print(dialogue_label.text)
-		dialogue_label.visible_characters = 0
-		letter_timer.start()
-	else:
+func _display_current_node() -> void:
+	_clear_choice_nodes()
+	is_waiting_for_choice = false
+	
+	var current_node: Dictionary = HistoryManager.get_current_node()
+	
+	if current_node.is_empty() or HistoryManager.current_node_id == "end_nodes":
 		_close_dialogue()
+		return
+		
+	is_typing = true
+	var raw_text: String = current_node.get("text", "")
+	var speaker_type: String = current_node.get("speaker_type", "npc")
+	
+	if speaker_type == "milo":
+		portrait_rect.texture = GameManager.milo_portrait
+		dialogue_label.text = "Milo: " + raw_text
+	elif speaker_type == "npc":
+		portrait_rect.texture = active_npc_portrait
+		dialogue_label.text = active_npc_name + ": " + raw_text
+	else:
+		portrait_rect.texture = null
+		dialogue_label.text = raw_text
+
+	dialogue_label.visible_characters = 0
+	letter_timer.start()
 
 func _on_letter_timer_timeout() -> void:
 	if dialogue_label.visible_characters < dialogue_label.get_total_character_count():
 		dialogue_label.visible_characters += 1
-		letter_timer.start() # Reinicia o timer para a próxima letra
+		letter_timer.start()
 	else:
-		is_typing = false
+		_on_typing_completed()
 
 func _finish_typing_instantly() -> void:
 	letter_timer.stop()
 	dialogue_label.visible_characters = dialogue_label.get_total_character_count()
+	_on_typing_completed()
+
+## Triggered automatically whenever a dialogue block finishes drawing characters.
+func _on_typing_completed() -> void:
 	is_typing = false
+	
+	var current_node: Dictionary = HistoryManager.get_current_node()
+	var choices: Array = current_node.get("choices", [])
+	
+	# If the text finished typing AND there are multiple choices, we must build the options UI
+	if choices.size() > 1:
+		_build_choice_interface(choices)
+
+## Instantiates native Button nodes dynamically based on the JSON choices graph array layout.
+func _build_choice_interface(choices: Array) -> void:
+	is_waiting_for_choice = true
+	_clear_choice_nodes()
+	
+	for i in range(choices.size()):
+		var choice_data: Dictionary = choices[i]
+		
+		# Create a native UI button on the fly
+		var btn = Button.new()
+		btn.text = choice_data.get("text", "...")
+		btn.alignment = HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT
+		
+		# Optional: apply pixel-art UI button themes here if you have them configured
+		
+		# Connect the press event to our receiver function using a Callable lambda bind
+		btn.pressed.connect(_on_choice_button_pressed.bind(i))
+		
+		choice_container.add_child(btn)
+	
+	# Accessibility: Automatically focus the first button so keyboard/controller navigation works natively
+	if choice_container.get_child_count() > 0:
+		choice_container.get_child(0).grab_focus()
+
+## Receiver hook activated when a dynamically spawned branch button gets pressed.
+func _on_choice_button_pressed(choice_index: int) -> void:
+	_clear_choice_nodes()
+	HistoryManager.advance_dialogue_by_choice(choice_index)
+	_display_current_node()
 
 func _advance_dialogue() -> void:
-	current_line_index += 1
+	var current_node: Dictionary = HistoryManager.get_current_node()
+	var choices: Array = current_node.get("choices", [])
 	
-	if current_line_index >= dialog_lines.size():
-		_close_dialogue()
-	else:
-		_display_current_line()
+	# If there's only 1 choice (like a single "Continue" button or implicit path), advance instantly
+	if choices.size() <= 1:
+		HistoryManager.advance_dialogue_by_choice(0)
+		_display_current_node()
+
+## Clears out all old button nodes safely from runtime tree memory blocks.
+func _clear_choice_nodes() -> void:
+	if choice_container:
+		for child in choice_container.get_children():
+			child.queue_free()
 
 func _close_dialogue() -> void:
+	_clear_choice_nodes()
 	hide()
-	dialog_lines.clear()
-	dialogue_finished.emit() # Marks the conversation as empty
-	
-	GameManager.milo.set_physics_process(true)
+	dialogue_finished.emit()
+	DialogManager.end_dialogue()
