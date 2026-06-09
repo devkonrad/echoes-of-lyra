@@ -1,7 +1,10 @@
-[gd_scene load_steps=20 format=3 uid="uid://bldq4ctlxqk81"]
+[gd_scene load_steps=25 format=3 uid="uid://bldq4ctlxqk81"]
 
 [ext_resource type="Script" path="res://scripts/milo.gd" id="1_ujvpr"]
 [ext_resource type="Texture2D" uid="uid://c5wxn350v1l0k" path="res://sprites/milo_sample.png" id="2_rtpg7"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ad2xo"]
+radius = 15.2971
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_itqgd"]
 size = Vector2(16, 16)
@@ -41,6 +44,22 @@ region = Rect2(64, 32, 32, 32)
 [sub_resource type="AtlasTexture" id="AtlasTexture_c3iub"]
 atlas = ExtResource("2_rtpg7")
 region = Rect2(96, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fs8cp"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(0, 224, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2x27q"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(32, 224, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t7ve6"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(64, 224, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a3n5w"]
+atlas = ExtResource("2_rtpg7")
+region = Rect2(96, 224, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_gr53j"]
 atlas = ExtResource("2_rtpg7")
@@ -107,6 +126,29 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_fs8cp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2x27q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2x27q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t7ve6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t7ve6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a3n5w")
+}],
+"loop": false,
+"name": &"left_attack",
+"speed": 12.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_gr53j")
 }, {
 "duration": 1.0,
@@ -134,6 +176,13 @@ script = ExtResource("1_ujvpr")
 TILE_SIZE = null
 WALK_SPEED = null
 STEALTH_SPEED = null
+invulnerability_duration = null
+
+[node name="AttackArea" type="Area2D" parent="."]
+
+[node name="AttackCollider" type="CollisionShape2D" parent="AttackArea"]
+shape = SubResource("CircleShape2D_ad2xo")
+debug_color = Color(0.819608, 0.105882, 0.133333, 0.521569)
 
 [node name="ColorRect" type="ColorRect" parent="."]
 visible = false
@@ -148,6 +197,8 @@ shape = SubResource("RectangleShape2D_itqgd")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_6g3tu")
-animation = &"attack"
+animation = &"left_attack"
+frame = 5
+frame_progress = 1.0
 
 [connection signal="animation_finished" from="Sprite" to="." method="_on_sprite_animation_finished"]

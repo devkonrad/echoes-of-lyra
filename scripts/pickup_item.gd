@@ -25,6 +25,7 @@ extends Area2D
 var final_item_data: ItemData
 var is_player_overlapping: bool = false
 
+
 func _ready() -> void:
 	# Connect both entering and exiting signals
 	body_entered.connect(_on_body_entered)
@@ -40,9 +41,15 @@ func _unhandled_input(event: InputEvent) -> void:
 func _setup_item_properties() -> void:
 	if item_data:
 		final_item_data = item_data.duplicate() as ItemData
+		# If an item was injected dynamically, fallback to resource strings if overrides are empty
+		if item_name_override.is_empty():
+			item_name_override = final_item_data.item_name
+		if description_override.is_empty():
+			description_override = final_item_data.description
 	else:
 		final_item_data = ItemData.new()
 	
+	# Apply final properties to data container
 	if not item_name_override.is_empty():
 		final_item_data.item_name = item_name_override
 	if not description_override.is_empty():

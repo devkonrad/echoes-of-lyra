@@ -1,161 +1,178 @@
 extends CharacterBody2D
 
-# --- Dialogue and Identity Assets ---
+# --- Assets & Configs ---
 @export var milo_portrait: Texture2D
-
-# --- Movement Constants ---
 @export var TILE_SIZE: int = 16
-@export var WALK_SPEED: float = 7.5     # Tiles por segundo (Ajuste para mudar a velocidade)
-@export var STEALTH_SPEED: float = 4.0   # Tiles por segundo no modo stealth
+@export var WALK_SPEED: float = 7.5
+@export var STEALTH_SPEED: float = 4.0
 
-# --- Character States ---
 enum States { IDLE, WALK, STEALTH }
 var current_state: States = States.IDLE
 
-# --- Node References ---
-@onready var color_rect: ColorRect = $ColorRect
+# --- Combat & Hit Recovery ---
+@export var invulnerability_duration: float = 1.0
+var is_invulnerable: bool = false
+var is_attacking: bool = false
+var original_battle_position: Vector2 = Vector2.ZERO
 
-# --- Grid-based variables ---
+# --- Nodes ---
+@onready var color_rect: ColorRect = $ColorRect
+@onready var sprite: AnimatedSprite2D = $Sprite
+@onready var attack_area: Area2D = $AttackArea
+
+# --- Grid Vectors ---
 var input_vector: Vector2 = Vector2.ZERO
 var is_moving: bool = false
 var target_position: Vector2 = Vector2.ZERO
 
-# --- Battle variables ---
-var is_attacking: bool = false
-var original_battle_position: Vector2 = Vector2.ZERO
+signal health_changed(new_health: int)
 
 func _ready() -> void:
-	# Garante que o personagem comece perfeitamente alinhado à grade de 16px
 	position = position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
 	target_position = position
-
-	$Sprite.play("idle")
+	sprite.play("idle")
+	sprite.animation_finished.connect(_on_sprite_animation_finished)
 
 func _physics_process(delta: float) -> void:
+	if is_attacking:
+		return
+		
 	_handle_stealth_toggle()
+	_handle_attack_input()
 	
 	if not is_moving:
 		_get_input()
 		if input_vector != Vector2.ZERO:
 			_start_move()
-	
-	if is_moving:
+	else:
 		_continue_move(delta)
 	
 	_update_visuals()
 
-# 1. Captures the player input (Strict 4-direction or 8-direction grid)
 func _get_input() -> void:
 	input_vector = Vector2.ZERO
+	
 	if Input.is_action_pressed("move_right"):
 		input_vector = Vector2.RIGHT
-		$Sprite.flip_h=false
-		$Sprite.play("walking")
+		sprite.flip_h = false
+		sprite.play("walking")
 	elif Input.is_action_pressed("move_left"):
 		input_vector = Vector2.LEFT
-		$Sprite.flip_h=true
-		$Sprite.play("walking")
+		sprite.flip_h = true
+		sprite.play("walking")
 	elif Input.is_action_pressed("move_down"):
 		input_vector = Vector2.DOWN
-		$Sprite.play("walking")
+		sprite.play("walking")
 	elif Input.is_action_pressed("move_up"):
 		input_vector = Vector2.UP
-		$Sprite.play("walking")
-	else:
-		if is_attacking:
-			attack()
-		else:
-			$Sprite.play("idle")
-			
+		sprite.play("walking")
+	elif not is_attacking:
+		sprite.play("idle")
 
-#Manages stealth toggle separate from movement state
 func _handle_stealth_toggle() -> void:
 	if Input.is_action_just_pressed("toggle_stealth"):
-		if current_state == States.STEALTH:
-			current_state = States.IDLE
-		else:
-			current_state = States.STEALTH
+		current_state = States.IDLE if current_state == States.STEALTH else States.STEALTH
 
-#Initiates the movement to the next tile
+func _handle_attack_input() -> void:
+	if not is_moving and Input.is_action_just_pressed("ui_attack"):
+		give_attack()
+
 func _start_move() -> void:
-	var target_speed = WALK_SPEED if current_state != States.STEALTH else STEALTH_SPEED
-	
-	# Calculates the next exact tile position
 	target_position = position + (input_vector * TILE_SIZE)
 	
-	# --- Collision Check ---
-	# test_move checks if moving to the next tile would collide with something
 	if not test_move(transform, input_vector * TILE_SIZE):
 		is_moving = true
 		if current_state != States.STEALTH:
 			current_state = States.WALK
 	else:
-		# If there is a wall, reset target so player can change direction instantly
 		target_position = position
 
-#Interpolates position towards the target tile
 func _continue_move(delta: float) -> void:
 	var current_speed = WALK_SPEED if current_state != States.STEALTH else STEALTH_SPEED
-	
-	# Moves the character linearly towards the target tile
 	position = position.move_toward(target_position, current_speed * TILE_SIZE * delta)
 	
-	# Checks if the target tile has been reached
 	if position == target_position:
 		is_moving = false
 		if current_state != States.STEALTH:
 			current_state = States.IDLE
 
-#Updates placeholder visuals
 func _update_visuals() -> void:
-	if current_state == States.STEALTH:
-		color_rect.modulate = Color(1, 1, 1, 0.4)
-	else:
-		color_rect.modulate = Color(1, 1, 1, 1)
+	color_rect.modulate = Color(1, 1, 1, 0.4) if current_state == States.STEALTH else Color(1, 1, 1, 1)
 
+# --> OVERWORLD HEALTH & DAMAGE MECHANICS
 
-# --> BATTLE METHODS
+func take_damage(amount: int) -> void:
+	if is_invulnerable:
+		return
+		
+	if typeof(PlayerStateManager) != TYPE_NIL:
+		PlayerStateManager.take_damage(amount, true)
+		health_changed.emit(PlayerStateManager.current_health)
+		
+	_trigger_hit_recovery()
+
+func _trigger_hit_recovery() -> void:
+	is_invulnerable = true
+	_flash_sprite_loop()
+	await get_tree().create_timer(invulnerability_duration).timeout
+	is_invulnerable = false
+
+func _flash_sprite_loop() -> void:
+	while is_invulnerable:
+		sprite.modulate = Color(15, 15, 15, 1)
+		await get_tree().create_timer(0.1).timeout
+		if not is_invulnerable: break
+		sprite.modulate = Color(1, 1, 1, 1)
+		await get_tree().create_timer(0.1).timeout
+	sprite.modulate = Color(1, 1, 1, 1)
+
+# --> OVERWORLD OFFENSIVE ATTACK MECHANICS
+
+func give_attack() -> void:
+	if is_attacking:
+		return
+		
+	is_attacking = true
+	
+	# Clean and direct animation execution
+	sprite.stop()
+	sprite.animation = "left_attack"
+	sprite.frame = 0
+	sprite.play()
+	
+	for body in attack_area.get_overlapping_bodies():
+		if body is EnemyPatrolBase:
+			body.take_damage(1)
+
+	# Safety release timer matching a 16 FPS animation setup
+	await get_tree().create_timer(0.25).timeout
+	
+	if is_instance_valid(self):
+		is_attacking = false
+		sprite.play("idle")
+
+# --> BATTLE METHODS (Arena System Core)
 
 func dash_and_attack(target_global_pos: Vector2) -> void:
 	if is_attacking:
 		return
 		
-	# Prepare settings
 	is_attacking = true
 	original_battle_position = global_position 
 	
-	# Dash to the Enemy
 	var tween: Tween = create_tween().set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
 	var attack_position: Vector2 = target_global_pos + Vector2(0, 10)
-	tween.tween_property(
-		self,
-		"global_position",
-		attack_position,
-		0.25
-	)
-	
-	# Perform the attack
+	tween.tween_property(self, "global_position", attack_position, 0.25)
 	tween.tween_callback(attack)
 
-
 func attack() -> void:
-	$Sprite.play("attack")
-
+	sprite.play("attack")
 
 func _on_sprite_animation_finished() -> void:
-	if $Sprite.animation == "attack":
+	if sprite.animation == "attack":
 		var tween_back: Tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
-
-		# Dash back to the original point
-		tween_back.tween_property(
-			self,
-			"global_position",
-			original_battle_position,
-			0.25
-		)
-
-		# Clean de variables
+		tween_back.tween_property(self, "global_position", original_battle_position, 0.25)
 		tween_back.tween_callback(func():
 			is_attacking = false
-			$Sprite.play("idle")
+			sprite.play("idle")
 		)

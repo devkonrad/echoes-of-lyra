@@ -57,23 +57,32 @@ func consume_magic(amount: int) -> bool:
 	print("[PlayerStateManager] Not enough magic!")
 	return false
 
+
 func restore_magic(amount: int) -> void:
 	current_magic += amount
 
-func take_damage(amount: int) -> void:
+
+func take_damage(amount: int, is_overworld: bool = false) -> void:
 	var final_damage: int = amount
 	
-	# If Milo is taking a defensive stance, mitigate damage by 50%
+	# Overworld damage (Hearts system interaction)
+	if is_overworld:
+		current_health -= final_damage
+		print("[PlayerStateManager] Milo took damage in Overworld. Hearts left: ", current_health)
+		return
+		
+	# Battle health takes priority during combat rounds
 	if is_defending:
 		final_damage = max(1, int(amount / 2.0))
 		print("[PlayerStateManager] Milo mitigated damage from ", amount, " to ", final_damage)
 		
-	# Battle health takes priority during combat rounds
 	current_battle_health -= final_damage
 	print("[PlayerStateManager] Milo took damage in battle. Current battle health: ", current_battle_health)
 
+
 func heal(amount: int) -> void:
 	current_battle_health += amount
+
 
 ## Restores Milo's combat health to maximum at the start of a battle encounter
 func reset_battle_health() -> void:
