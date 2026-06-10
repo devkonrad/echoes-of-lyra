@@ -3,7 +3,7 @@ extends CharacterBody2D
 
 enum State { IDLE, PATROL, CHASE, FATIGUED }
 
-# Defeated signal (for callbacks )
+# Defeated signal (for callbacks)
 signal defeated
 
 # --- Movement System ---
@@ -24,7 +24,8 @@ signal defeated
 # --- Combat & Loot Stats ---
 @export_group("Combat & Loot Stats")
 @export var max_health: int = 3
-@export var custom_item_drop: ItemData
+## Drop items via JSON database ID (e.g., 'potion_health', 'iron_sword')
+@export var drop_item_id: String = ""
 @export_range(0.0, 1.0) var drop_chance: float = 1.0
 
 # --- Node References ---
@@ -184,15 +185,23 @@ func _die() -> void:
 	_process_loot_drop()
 	queue_free()
 
+## Handles item drops exclusively through the data-driven JSON system.
 func _process_loot_drop() -> void:
-	if randf() > drop_chance:
+	var target_id: String = drop_item_id.strip_edges()
+	
+	# Guard Clause: Stop early if there's no item ID configured or if the drop chance fails
+	if target_id == "" or randf() > drop_chance:
 		return
 		
 	var item_instance = PICKUP_ITEM_SCENE.instantiate()
 	item_instance.global_position = global_position
 	
-	if custom_item_drop:
-		item_instance.item_data = custom_item_drop
+	# Pass the clean JSON ID string directly down to the pickup area entity
+	if "item_id" in item_instance:
+		item_instance.item_id = target_id
+		print("[LootSystem] Successfully spawned data-driven item: ", target_id)
+	else:
+		push_error("[LootSystem] Critical: The pickup item scene is missing an 'item_id' property.")
 		
 	get_parent().add_child(item_instance)
 

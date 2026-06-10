@@ -55,6 +55,15 @@ func _display_current_node() -> void:
 		_close_dialogue()
 		return
 		
+	# --- DATA-DRIVEN REWARD CHECK ---
+	# Checked and processed strictly as the node mounts into memory scope
+	if current_node.has("reward_item_id") and current_node["reward_item_id"] != "":
+		var reward_id: String = current_node["reward_item_id"].strip_edges()
+		if reward_id != "":
+			_grant_dialogue_reward(reward_id)
+			# SAFETY LOCK: Clear runtime key payload to block double-trigger loops upon node transitions
+			current_node["reward_item_id"] = ""
+			
 	is_typing = true
 	var raw_text: String = current_node.get("text", "")
 	var speaker_type: String = current_node.get("speaker_type", "npc")
@@ -71,6 +80,23 @@ func _display_current_node() -> void:
 
 	dialogue_label.visible_characters = 0
 	letter_timer.start()
+
+
+## Awards a data-driven item to Milo's inventory backend using the master JSON database.
+func _grant_dialogue_reward(item_id: String) -> void:
+	# 1. Fetch a clean, isolated duplicate of the item from the runtime JSON catalog
+	var new_item: ItemData = ItemManager.get_item(item_id)
+	
+	if new_item:
+		# 2. Inject the dynamic resource straight into Milo's inventory array
+		InventoryManager.inventory.append(new_item)
+		print("[DialogueUI] Success! Milo received database reward: ", new_item.item_name)
+		
+		# 3. Raise the conditional flag so DialogManager can trigger the inventory overlay upon closing
+		if "should_open_inventory" in HistoryManager:
+			HistoryManager.should_open_inventory = true
+	else:
+		push_error("[DialogueUI] Critical: Failed to grant reward. ID '" + item_id + "' does not exist in JSON database.")
 
 func _on_letter_timer_timeout() -> void:
 	if dialogue_label.visible_characters < dialogue_label.get_total_character_count():
@@ -107,8 +133,6 @@ func _build_choice_interface(choices: Array) -> void:
 		var btn = Button.new()
 		btn.text = choice_data.get("text", "...")
 		btn.alignment = HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT
-		
-		# Optional: apply pixel-art UI button themes here if you have them configured
 		
 		# Connect the press event to our receiver function using a Callable lambda bind
 		btn.pressed.connect(_on_choice_button_pressed.bind(i))

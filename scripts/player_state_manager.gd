@@ -80,8 +80,14 @@ func take_damage(amount: int, is_overworld: bool = false) -> void:
 	print("[PlayerStateManager] Milo took damage in battle. Current battle health: ", current_battle_health)
 
 
+## Restores Milo's battle health (numbers/combat)
 func heal(amount: int) -> void:
 	current_battle_health += amount
+
+
+## Restores Milo's overworld health (hearts/exploration)
+func heal_overworld(amount: int) -> void:
+	current_health += amount
 
 
 ## Restores Milo's combat health to maximum at the start of a battle encounter

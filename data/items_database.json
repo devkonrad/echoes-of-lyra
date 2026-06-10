@@ -1,0 +1,26 @@
+{
+  "potion_health": {
+    "name": "Health Potion",
+    "description": "Restores 1 heart of Milo's life.",
+    "texture_path": "res://sprites/items/potion-001.png",
+    "item_type": "CONSUMABLE",
+    "effect_type": "HEAL",
+    "effect_value": 1
+  },
+  "iron_sword": {
+    "name": "Iron Sword",
+    "description": "A lightweight blade. Increases Milo's attack damage.",
+    "texture_path": "res://sprites/items/sword-001.png",
+    "item_type": "EQUIPMENT",
+    "effect_type": "EQUIP_ATK",
+    "effect_value": 1
+  },
+  "dungeon_key": {
+    "name": "Dungeon Key",
+    "description": "A bronze key that unlocks specific dungeon portals.",
+    "texture_path": "res://sprites/items/key-001.png",
+    "item_type": "QUEST",
+    "effect_type": "KEY_VERIFY",
+    "effect_value": 0
+  }
+}

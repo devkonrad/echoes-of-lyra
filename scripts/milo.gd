@@ -31,7 +31,6 @@ func _ready() -> void:
 	position = position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
 	target_position = position
 	sprite.play("idle")
-	sprite.animation_finished.connect(_on_sprite_animation_finished)
 
 func _physics_process(delta: float) -> void:
 	if is_attacking:
@@ -140,9 +139,15 @@ func give_attack() -> void:
 	sprite.frame = 0
 	sprite.play()
 	
+	# Fetch dynamic attack power from our state manager
+	var final_damage: int = 1 # Fallback safe value
+	if typeof(PlayerStateManager) != TYPE_NIL:
+		final_damage = PlayerStateManager.attack_power
+	
 	for body in attack_area.get_overlapping_bodies():
 		if body is EnemyPatrolBase:
-			body.take_damage(1)
+			# Pass the dynamic status modified by inventory equipment!
+			body.take_damage(final_damage)
 
 	# Safety release timer matching a 16 FPS animation setup
 	await get_tree().create_timer(0.25).timeout

@@ -22,8 +22,9 @@ SceneManager="*res://scenes/scene_manager.tscn"
 InventoryManager="*res://scripts/inventory_manager.gd"
 DialogManager="*res://scripts/dialog_manager.gd"
 CameraManager="*res://scripts/camera_manager.gd"
-PlayerStateManager="*res://scripts/PlayerStateManager.gd"
+PlayerStateManager="*res://scripts/player_state_manager.gd"
 HistoryManager="*res://scripts/history_manager.gd"
+ItemManager="*res://scripts/item_manager.gd"
 
 [display]
 

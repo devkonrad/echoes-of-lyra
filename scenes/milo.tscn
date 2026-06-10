@@ -173,10 +173,6 @@ animations = [{
 
 [node name="Milo" type="CharacterBody2D"]
 script = ExtResource("1_ujvpr")
-TILE_SIZE = null
-WALK_SPEED = null
-STEALTH_SPEED = null
-invulnerability_duration = null
 
 [node name="AttackArea" type="Area2D" parent="."]
 

@@ -480,14 +480,25 @@ func _end_battle(is_victory: bool) -> void:
 			# The announcer will reveal ONLY the full-screen banner text
 			UiCanvas.battle_ui_menu.announce_event("You Win!!!")
 
-		if current_encounter and current_encounter.victory_reward_item:
-			if UiCanvas:
-				var drop_instance = VICTORY_DROP_SCENE.instantiate()
-				UiCanvas.add_child(drop_instance)
-				drop_instance.launch_drop(
-					current_encounter.victory_reward_item
-				)
-
+		# --- DATA-DRIVEN VICTORY REWARD CLEANUP ---
+		# Check if the encounter config has a valid JSON Item ID defined
+		if current_encounter and "victory_reward_id" in current_encounter:
+			var reward_id: String = current_encounter.victory_reward_id.strip_edges()
+			
+			if reward_id != "":
+				# Fetch a clean, duplicated instance from our JSON master database catalog
+				var reward_item: ItemData = ItemManager.get_item(reward_id)
+				
+				if reward_item and UiCanvas:
+					var drop_instance = VICTORY_DROP_SCENE.instantiate()
+					UiCanvas.add_child(drop_instance)
+					
+					# Pass the clean data-driven item down to your visual presentation node
+					drop_instance.launch_drop(reward_item)
+					print("[Battle] Success! Data-driven victory item instantiated: ", reward_id)
+				else:
+					print("[Battle] Warning: Could not resolve reward ID '", reward_id, "' from JSON catalog.")
+					
 		print("[Battle] Victory!")
 	else:
 		if UiCanvas and UiCanvas.battle_ui_menu:

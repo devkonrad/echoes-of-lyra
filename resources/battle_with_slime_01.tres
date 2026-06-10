@@ -1,24 +1,15 @@
-[gd_resource type="Resource" script_class="BattleEncounter" load_steps=8 format=3 uid="uid://beejjs5b12aay"]
+[gd_resource type="Resource" script_class="BattleEncounter" load_steps=5 format=3 uid="uid://beejjs5b12aay"]
 
 [ext_resource type="Script" path="res://scripts/battle_encounter.gd" id="1_jbrtr"]
-[ext_resource type="Script" path="res://scripts/item_data.gd" id="2_1hjj1"]
 [ext_resource type="PackedScene" uid="uid://bf85x7nyfua1m" path="res://scenes/battle_slime.tscn" id="2_n7guv"]
-[ext_resource type="Texture2D" uid="uid://ce10slse0w0em" path="res://sprites/items/sword-001.png" id="3_0sd58"]
 [ext_resource type="Script" path="res://scripts/battle_wave.gd" id="3_scdu0"]
-
-[sub_resource type="Resource" id="Resource_vf7sy"]
-script = ExtResource("2_1hjj1")
-item_name = "Sword"
-description = "A simple sword"
-texture = ExtResource("3_0sd58")
-is_consumable = false
 
 [sub_resource type="Resource" id="Resource_oq117"]
 resource_local_to_scene = true
 script = ExtResource("3_scdu0")
-enemies = Array[PackedScene]([ExtResource("2_n7guv"), ExtResource("2_n7guv"), ExtResource("2_n7guv")])
+enemies = Array[PackedScene]([ExtResource("2_n7guv")])
 
 [resource]
 script = ExtResource("1_jbrtr")
 waves = Array[Resource]([SubResource("Resource_oq117")])
-victory_reward_item = SubResource("Resource_vf7sy")
+victory_reward_id = "iron_sword"

@@ -1,14 +1,12 @@
-[gd_scene load_steps=12 format=4 uid="uid://rbnpiq8lte8c"]
+[gd_scene load_steps=10 format=4 uid="uid://rbnpiq8lte8c"]
 
 [ext_resource type="Script" path="res://scripts/overworld.gd" id="1_muawq"]
 [ext_resource type="Texture2D" uid="uid://d3224xp43xgpb" path="res://refs/map_reference.png" id="2_2eptm"]
 [ext_resource type="Texture2D" uid="uid://c6od4xubnhw31" path="res://maps/zelda_based_tileset.png" id="3_w7jl7"]
 [ext_resource type="PackedScene" uid="uid://fyp5je5i6vqo" path="res://scenes/pickup_item.tscn" id="4_4w1os"]
-[ext_resource type="Texture2D" uid="uid://qorp5ha6byeg" path="res://sprites/items-sample.png" id="5_trpej"]
 [ext_resource type="PackedScene" uid="uid://xoyhrpuadwtb" path="res://scenes/npc_base.tscn" id="7_horyv"]
 [ext_resource type="PackedScene" uid="uid://cbyf2ii4y0s3" path="res://scenes/door_portal.tscn" id="7_uynec"]
 [ext_resource type="PackedScene" uid="uid://c4r6io5bgugpx" path="res://scenes/enemy_warrior.tscn" id="8_pnrw3"]
-[ext_resource type="Resource" uid="uid://d0l1tosgs2rpw" path="res://resources/items/potion_health.tres" id="9_1mq2l"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2ulua"]
 texture = ExtResource("3_w7jl7")
@@ -4135,31 +4133,16 @@ metadata/_edit_lock_ = true
 
 [node name="potion" parent="." instance=ExtResource("4_4w1os")]
 position = Vector2(1481, 1055)
-item_name_override = "Potion"
-description_override = "Some potion
-"
-is_consumable_override = true
-use_atlas_cutting = true
-sprite_sheet = ExtResource("5_trpej")
+item_id = "potion_health"
 region_rect = Rect2(0, 0, 16, 16)
 
 [node name="PickupItem" parent="." instance=ExtResource("4_4w1os")]
 position = Vector2(1525, 1055)
-item_name_override = "Glove"
-description_override = "A simple glove"
-is_consumable_override = true
-use_atlas_cutting = true
-sprite_sheet = ExtResource("5_trpej")
-region_rect = Rect2(64, 64, 16, 16)
+item_id = "dungeon_key"
 
 [node name="PickupItem2" parent="." instance=ExtResource("4_4w1os")]
 position = Vector2(1502, 1055)
-item_name_override = "Nercklace"
-description_override = "Power Necklace"
-is_consumable_override = true
-use_atlas_cutting = true
-sprite_sheet = ExtResource("5_trpej")
-region_rect = Rect2(32, 48, 16, 16)
+item_id = "iron_sword"
 
 [node name="door_portal" parent="." instance=ExtResource("7_uynec")]
 position = Vector2(1647, 889)
@@ -4181,6 +4164,6 @@ battle_resource_filename = "battle_with_slime_01.tres"
 
 [node name="EnemyWarrior" parent="." instance=ExtResource("8_pnrw3")]
 position = Vector2(1527, 1284)
-custom_item_drop = ExtResource("9_1mq2l")
+drop_item_id = "potion_health"
 
 [connection signal="defeated" from="EnemyWarrior" to="EnemyWarrior" method="_on_defeated"]

@@ -10,7 +10,7 @@ var current_node_id: String = ""
 ## Tracks if an item reward was granted during the conversation session
 var should_open_inventory: bool = false
 
-## THE NEW FEATURE: Persistent registry storage tracking completed game story choices/flags
+## Persistent registry storage tracking completed game story choices/flags
 var story_flags: Dictionary = {}
 
 func _ready() -> void:
@@ -57,34 +57,10 @@ func advance_dialogue_by_choice(choice_index: int) -> void:
 	else:
 		current_node_id = "end_nodes"
 
-## Checks the node data structure for item drops or progression world flags.
+## Checks the node data structure for progression world flags and story metadata.
 func _process_node_side_effects() -> void:
 	var current_node = get_current_node()
 	
-	# Intercept and process unique conditional reward configurations
-	if current_node.has("reward_item_id"):
-		var item_id = current_node.get("reward_item_id")
-		
-		# Build a unique progressive identifier anchor name based on this file node structure
-		var unique_reward_flag = current_node_id + "_reward_claimed"
-		
-		# THE SAFETY LOCK: Only execute granting pipeline logic if the flag record turns up empty
-		if not story_flags.get(unique_reward_flag, false):
-			_grant_item_to_milo(item_id)
-			story_flags[unique_reward_flag] = true
-		else:
-			print("[HistoryManager] Reward skip: Player has already claimed the item link: ", unique_reward_flag)
-
-## Resolves item rewards by grabbing the registered ItemData resource files.
-func _grant_item_to_milo(item_id: String) -> void:
-	var resource_path = "res://resources/items/" + item_id + ".tres"
-	
-	if ResourceLoader.exists(resource_path):
-		var item_res = load(resource_path) as ItemData
-		if item_res:
-			InventoryManager.add_item(item_res)
-			# Raise the trigger flag to automatically present the inventory UI upon dialogue close
-			should_open_inventory = true
-			print("[HistoryManager] Dialogue triggered reward granted: ", item_res.item_name)
-	else:
-		print("[HistoryManager] Error: Item resource file could not be found at: ", resource_path)
+	# NOTE: Future narrative tracking logic (like setting story_flags["defeated_boss"] = true)
+	# based on the node's choice outcomes will be processed here safely.
+	pass
