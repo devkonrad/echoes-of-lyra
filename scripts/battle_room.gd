@@ -143,7 +143,7 @@ func _setup_battle() -> void:
 	
 	# Hides the door
 	if is_instance_valid(exit_door):
-			exit_door.visible = false
+		exit_door.visible = false
 
 	# Guard Clause: Ensure encounter data is present
 	if not current_encounter:
@@ -472,33 +472,38 @@ func _end_battle(is_victory: bool) -> void:
 			UiCanvas.battle_ui_menu.get_node("ActionMenu").hide()
 		
 	if is_victory:
-		# Shows the door
 		if is_instance_valid(exit_door):
-			exit_door.visible = true
+			exit_door.visible = false # Keep it hidden until rewards check closes safely
 
 		if UiCanvas and UiCanvas.battle_ui_menu:
-			# The announcer will reveal ONLY the full-screen banner text
 			UiCanvas.battle_ui_menu.announce_event("You Win!!!")
 
 		# --- DATA-DRIVEN VICTORY REWARD CLEANUP ---
-		# Check if the encounter config has a valid JSON Item ID defined
 		if current_encounter and "victory_reward_id" in current_encounter:
 			var reward_id: String = current_encounter.victory_reward_id.strip_edges()
 			
 			if reward_id != "":
-				# Fetch a clean, duplicated instance from our JSON master database catalog
 				var reward_item: ItemData = ItemManager.get_item(reward_id)
 				
-				if reward_item and UiCanvas:
-					var drop_instance = VICTORY_DROP_SCENE.instantiate()
-					UiCanvas.add_child(drop_instance)
-					
-					# Pass the clean data-driven item down to your visual presentation node
-					drop_instance.launch_drop(reward_item)
-					print("[Battle] Success! Data-driven victory item instantiated: ", reward_id)
+				if reward_item:
+					# CHECK UNIQUE: Verify uniqueness safely before instantiation
+					if reward_item.is_unique and InventoryManager.has_item(reward_id):
+						if UiCanvas and UiCanvas.battle_ui_menu:
+							UiCanvas.battle_ui_menu.announce_event("Sorry! You already " + reward_item.item_name + "!")
+					else:
+						# DESIGN CHOICE: We instantiate the visual presentation node.
+						# Ensure 'launch_drop' appends the item to InventoryManager when animation ends.
+						var drop_instance = VICTORY_DROP_SCENE.instantiate()
+						UiCanvas.add_child(drop_instance)
+						drop_instance.launch_drop(reward_item)
+						print("[Battle] Spawning dynamic item drop view for: ", reward_id)
 				else:
-					print("[Battle] Warning: Could not resolve reward ID '", reward_id, "' from JSON catalog.")
+					push_error("[Battle] Critical: Item ID '" + reward_id + "' not found in JSON catalog.")
 					
+		# Turn exit door visibility back on after validation triggers settle down
+		if is_instance_valid(exit_door):
+			exit_door.visible = true
+			
 		print("[Battle] Victory!")
 	else:
 		if UiCanvas and UiCanvas.battle_ui_menu:

@@ -63,6 +63,9 @@ func _create_item_data_from_dict(item_id: String, dict: Dictionary) -> ItemData:
 		
 	item.effect_value = int(dict.get("effect_value", 0))
 	
+	# FIX: Explicitly parse the boolean uniqueness flag from the JSON dictionary
+	item.is_unique = bool(dict.get("is_unique", false))
+	
 	return item
 
 # Public method to fetch a clean duplicate of any item from the catalog

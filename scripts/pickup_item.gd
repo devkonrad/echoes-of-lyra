@@ -89,6 +89,11 @@ func _on_body_exited(body: Node2D) -> void:
 
 func _collect_item() -> void:
 	if final_item_data and typeof(InventoryManager) != TYPE_NIL:
+
+		if final_item_data.is_unique and InventoryManager.has_item(final_item_data.id):
+			print("You already have the: " + str(final_item_data.item_name))
+			return
+		
 		InventoryManager.add_item(final_item_data)
 		print("[Pickup] Milo successfully collected: ", final_item_data.item_name)
 	

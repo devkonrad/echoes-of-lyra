@@ -174,7 +174,6 @@ bg_color = Color(0.0915982, 0.561691, 0.180283, 1)
 
 [node name="EnemyWarrior" type="CharacterBody2D"]
 script = ExtResource("1_ciq1k")
-custom_item_drop = null
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 scale = Vector2(0.3, 0.3)
